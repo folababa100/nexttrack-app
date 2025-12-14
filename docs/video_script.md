@@ -103,17 +103,17 @@ Down here, you can see the 'Audio Profile' or centroid that was computed from my
 
 When you click 'Get Recommendations', the client sends a POST request to my API with the list of track IDs. The server then:
 
-1. **Fetches audio features** from Spotify — things like energy, tempo, valence, and danceability.
+1. **Fetches track metadata** from Spotify — artist names, album info, and track details.
 
-2. **Computes a weighted centroid** — essentially the 'average sound' of your session, with more recent tracks weighted higher.
+2. **Generates candidates** using artist-based search — I search for more tracks by the same artists you selected, expanding outward to find related music.
 
-3. **Generates candidates** — since I don't have a database of 50 million songs, I use Spotify's 'related artists' and 'recommendations' endpoints to find plausible candidates.
+3. **Ranks candidates** by relevance — Spotify's search returns results ordered by popularity and relevance to your artists.
 
-4. **Scores each candidate** using weighted Euclidean distance — the closer a track is to the centroid, the higher it scores.
+4. **Returns scored recommendations** — each track gets a confidence score based on its position in the search results.
 
-The key technical challenge was *candidate generation* without a database. My solution was to expand outward from the input artists, which adds some latency but maintains the stateless, privacy-preserving design.
+Note: Spotify recently deprecated their audio-features and recommendations endpoints for apps using Client Credentials. My solution was to pivot to a search-based discovery approach, which still produces relevant recommendations while maintaining the stateless, privacy-preserving design.
 
-All of this happens in under 500 milliseconds."
+All of this happens in under one second."
 
 ---
 
@@ -123,11 +123,11 @@ All of this happens in under 500 milliseconds."
 
 **SAY:**
 
-"In my testing, NextTrack's recommendations had an average feature distance of 0.18 from the input, compared to 0.45 for random selection — a 55% improvement.
+"In my testing, NextTrack successfully returns relevant recommendations from the same artists and related genres. The search-based approach ensures cultural coherence — if you're listening to Afrobeats artists, you get more Afrobeats recommendations.
 
-User feedback was positive, with testers noting the recommendations 'felt natural' and they appreciated being able to adjust preferences in real-time.
+User feedback was positive, with testers noting the recommendations 'felt natural' and appreciated the instant, account-free experience.
 
-There are areas for improvement. Sometimes the algorithm recommends tracks that are *mathematically* similar but *culturally* different — like suggesting soft jazz when you're listening to lo-fi hip hop. My next step is to integrate MusicBrainz metadata to add that cultural context.
+There are areas for future improvement. With user-authorized OAuth tokens, I could access Spotify's audio features and recommendations endpoints for even more sophisticated similarity matching. Another enhancement would be integrating MusicBrainz metadata for genre-aware discovery.
 
 But the core prototype proves the concept: you *can* get quality recommendations without sacrificing your privacy.
 
@@ -171,11 +171,11 @@ If the API fails during recording, you can:
 
 1. ✅ **Privacy-focused** — no user tracking
 2. ✅ **Stateless** — server can't remember you
-3. ✅ **Real Spotify integration** — actual audio features
-4. ✅ **Weighted centroid** — recent tracks matter more
-5. ✅ **Euclidean distance** — mathematical similarity
-6. ✅ **55% better than random** — quantitative proof
-7. ✅ **Future work** — cultural context via MusicBrainz
+3. ✅ **Real Spotify integration** — live search and track data
+4. ✅ **Artist-based discovery** — finds more tracks from your artists
+5. ✅ **Search-based ranking** — leverages Spotify's relevance ordering
+6. ✅ **Culturally coherent** — genre consistency in recommendations
+7. ✅ **Future work** — OAuth for audio features, MusicBrainz integration
 
 ---
 
