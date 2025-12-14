@@ -40,6 +40,7 @@ pip install -r requirements.txt
 # Set environment variables
 export SPOTIFY_CLIENT_ID="your_client_id_here"
 export SPOTIFY_CLIENT_SECRET="your_client_secret_here"
+export SPOTIFY_MARKET="US"  # Optional fallback country code for catalog requests
 
 # Run the server
 cd src
@@ -155,3 +156,7 @@ This project is for educational purposes as part of CM3035 Advanced Web Design.
 - [Spotify Web API Documentation](https://developer.spotify.com/documentation/web-api/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Audio Features Explained](https://developer.spotify.com/documentation/web-api/reference/get-audio-features)
+
+## 🛠️ Troubleshooting
+
+- `403 Forbidden` from Spotify: double-check that your Client ID/Secret are correct, the app has at least one Redirect URI in the dashboard, and that `SPOTIFY_MARKET` is set to a country where your seed tracks are available (e.g., `US`, `GB`, `NG`). Restart the server after updating environment variables.
