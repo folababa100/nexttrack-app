@@ -9,6 +9,7 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import List, Optional, Dict
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +19,8 @@ from pydantic import BaseModel, Field
 from spotify_client import SpotifyClient
 from engine import RecommendationEngine
 
+# Load environment variables from .env file
+load_dotenv()
 
 # Global instances
 spotify_client: Optional[SpotifyClient] = None
