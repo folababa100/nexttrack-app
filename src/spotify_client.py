@@ -121,9 +121,10 @@ class SpotifyClient:
     AUTH_URL = "https://accounts.spotify.com/api/token"
     API_BASE = "https://api.spotify.com/v1"
 
-    def __init__(self, client_id: str, client_secret: str):
+    def __init__(self, client_id: str, client_secret: str, market: str = 'US'):
         self.client_id = client_id
         self.client_secret = client_secret
+        self.market = market.upper() if market else 'US'
         self._access_token: Optional[str] = None
         self._token_expires: float = 0
         self._http_client: Optional[httpx.AsyncClient] = None
@@ -184,7 +185,9 @@ class SpotifyClient:
             return await self._api_request(method, endpoint, **kwargs)
 
         if response.status_code != 200:
-            raise Exception(f"Spotify API error: {response.status_code} - {response.text}")
+            raise Exception(
+                f"Spotify API error ({method} {endpoint}): {response.status_code} - {response.text}"
+            )
 
         return response.json()
 
@@ -194,7 +197,11 @@ class SpotifyClient:
         if track_id.startswith('spotify:track:'):
             track_id = track_id.split(':')[-1]
 
-        data = await self._api_request('GET', f'/tracks/{track_id}')
+        data = await self._api_request(
+            'GET',
+            f'/tracks/{track_id}',
+            params={'market': self.market}
+        )
         return Track.from_spotify_response(data)
 
     async def get_tracks(self, track_ids: List[str]) -> List[Track]:
@@ -210,7 +217,14 @@ class SpotifyClient:
         tracks = []
         for i in range(0, len(clean_ids), 50):
             batch = clean_ids[i:i+50]
-            data = await self._api_request('GET', '/tracks', params={'ids': ','.join(batch)})
+            data = await self._api_request(
+                'GET',
+                '/tracks',
+                params={
+                    'ids': ','.join(batch),
+                    'market': self.market
+                }
+            )
             for track_data in data.get('tracks', []):
                 if track_data:
                     tracks.append(Track.from_spotify_response(track_data))
@@ -218,7 +232,13 @@ class SpotifyClient:
         return tracks
 
     async def get_audio_features(self, track_ids: List[str]) -> Dict[str, AudioFeatures]:
-        """Get audio features for multiple tracks."""
+        """
+        Get audio features for multiple tracks.
+
+        NOTE: As of late 2024, Spotify requires user-authorized tokens for
+        /audio-features. With Client Credentials this will return 403.
+        We gracefully return an empty dict so the app can still work.
+        """
         # Clean track IDs
         clean_ids = []
         for tid in track_ids:
@@ -227,23 +247,33 @@ class SpotifyClient:
             clean_ids.append(tid)
 
         features = {}
-        for i in range(0, len(clean_ids), 100):
-            batch = clean_ids[i:i+100]
-            data = await self._api_request('GET', '/audio-features', params={'ids': ','.join(batch)})
-            for af in data.get('audio_features', []):
-                if af:
-                    features[af['id']] = AudioFeatures.from_dict(af)
+        try:
+            for i in range(0, len(clean_ids), 100):
+                batch = clean_ids[i:i+100]
+                data = await self._api_request('GET', '/audio-features', params={'ids': ','.join(batch)})
+                for af in data.get('audio_features', []):
+                    if af:
+                        features[af['id']] = AudioFeatures.from_dict(af)
+        except Exception:
+            # Audio features endpoint deprecated - requires user OAuth since late 2024
+            # Silently return empty dict; app works without audio features
+            return {}
 
         return features
 
     async def get_tracks_with_features(self, track_ids: List[str]) -> List[Track]:
-        """Get tracks with their audio features."""
+        """
+        Get tracks with their audio features.
+
+        Audio features may be unavailable with Client Credentials flow.
+        Tracks are still returned, just without audio_features attached.
+        """
         tracks = await self.get_tracks(track_ids)
 
-        # Get audio features
+        # Try to get audio features (may fail with Client Credentials)
         features = await self.get_audio_features([t.id for t in tracks])
 
-        # Attach features to tracks
+        # Attach features to tracks (may be empty dict)
         for track in tracks:
             track.audio_features = features.get(track.id)
 
@@ -253,7 +283,12 @@ class SpotifyClient:
         """Search for tracks."""
         data = await self._api_request(
             'GET', '/search',
-            params={'q': query, 'type': 'track', 'limit': min(limit, 50)}
+            params={
+                'q': query,
+                'type': 'track',
+                'limit': min(limit, 50),
+                'market': self.market
+            }
         )
 
         tracks = []
@@ -279,7 +314,10 @@ class SpotifyClient:
         - target_tempo, min_tempo, max_tempo
         - etc.
         """
-        params = {'limit': min(limit, 100)}
+        params = {
+            'limit': min(limit, 100),
+            'market': self.market
+        }
 
         if seed_tracks:
             clean_ids = [t.split(':')[-1] if ':' in t else t for t in seed_tracks[:5]]
@@ -302,8 +340,9 @@ class SpotifyClient:
 
         return tracks
 
-    async def get_artist_top_tracks(self, artist_id: str, market: str = 'US') -> List[Track]:
+    async def get_artist_top_tracks(self, artist_id: str, market: Optional[str] = None) -> List[Track]:
         """Get an artist's top tracks."""
+        market = (market or self.market).upper()
         data = await self._api_request(
             'GET', f'/artists/{artist_id}/top-tracks',
             params={'market': market}

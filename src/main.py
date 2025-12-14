@@ -32,9 +32,10 @@ async def lifespan(app: FastAPI):
     # Get credentials from environment
     client_id = os.environ.get('SPOTIFY_CLIENT_ID', '')
     client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET', '')
+    market = os.environ.get('SPOTIFY_MARKET', 'US')
 
     if client_id and client_secret:
-        spotify_client = SpotifyClient(client_id, client_secret)
+        spotify_client = SpotifyClient(client_id, client_secret, market=market)
         recommendation_engine = RecommendationEngine(spotify_client)
         print("✓ Spotify client initialized")
     else:

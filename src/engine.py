@@ -62,10 +62,14 @@ class AudioFeatureSimilarity:
         """
         Compute the weighted centroid of audio features.
         More recent tracks (later in list) get higher weights.
+
+        Returns default centroid (0.5 for all features) if no features available.
         """
         tracks_with_features = [t for t in tracks if t.audio_features]
         if not tracks_with_features:
-            raise ValueError("No tracks with audio features")
+            # Return default centroid when no audio features available
+            # (e.g., when using Client Credentials without audio-features access)
+            return {feature: 0.5 for feature in self.weights.keys()}
 
         n = len(tracks_with_features)
 
@@ -131,12 +135,29 @@ class AudioFeatureSimilarity:
         centroid: Dict[str, float],
         preferences: Optional[Dict] = None
     ) -> List[Recommendation]:
-        """Rank candidate tracks by similarity to centroid."""
-        recommendations = []
+        """
+        Rank candidate tracks by similarity to centroid.
 
-        for track in candidates:
-            # Skip tracks without features
+        If candidates lack audio features (Client Credentials mode),
+        returns them in Spotify's original recommendation order.
+        """
+        recommendations = []
+        has_any_features = any(t.audio_features for t in candidates)
+
+        for i, track in enumerate(candidates):
+            # When no features available, use position-based scoring
             if not track.audio_features:
+                if has_any_features:
+                    # Skip tracks without features if some have them
+                    continue
+                # Use decreasing score based on Spotify's order
+                score = max(0.5, 1.0 - (i * 0.03))
+                recommendations.append(Recommendation(
+                    track=track,
+                    score=score,
+                    reasoning=["spotify_recommendation"],
+                    feature_scores={}
+                ))
                 continue
 
             # Apply preference filters
@@ -274,73 +295,72 @@ class RecommendationEngine:
         preferences: Optional[Dict],
         limit: int
     ) -> List[Track]:
-        """Generate candidate tracks using various methods."""
+        """
+        Generate candidate tracks using search-based discovery.
+
+        Since Spotify deprecated /recommendations and /related-artists for
+        Client Credentials flow (late 2024), we use artist-based search
+        to find similar tracks.
+        """
         candidates = []
-        seen_ids = set()
+        seen_ids = set(t.id for t in input_tracks)  # Exclude input tracks
 
-        # Use Spotify's recommendation API with seed tracks
-        seed_ids = [t.id for t in input_tracks[-5:]]  # Last 5 tracks
+        # Get unique artists from input tracks
+        artists = []
+        seen_artists = set()
+        for track in input_tracks:
+            if track.artist_name and track.artist_name not in seen_artists:
+                artists.append(track.artist_name)
+                seen_artists.add(track.artist_name)
 
-        # Build audio feature targets from centroid
-        audio_params = {}
-
-        # Set target values from centroid
-        audio_params['target_energy'] = centroid.get('energy', 0.5)
-        audio_params['target_valence'] = centroid.get('valence', 0.5)
-        audio_params['target_danceability'] = centroid.get('danceability', 0.5)
-
-        # Denormalize tempo
-        tempo_norm = centroid.get('tempo', 0.5)
-        audio_params['target_tempo'] = 50 + tempo_norm * 150
-
-        # Apply preference constraints
-        if preferences:
-            if 'energy_range' in preferences:
-                audio_params['min_energy'] = preferences['energy_range'][0]
-                audio_params['max_energy'] = preferences['energy_range'][1]
-
-            if 'tempo_range' in preferences:
-                audio_params['min_tempo'] = preferences['tempo_range'][0]
-                audio_params['max_tempo'] = preferences['tempo_range'][1]
-
-            if 'valence_range' in preferences:
-                audio_params['min_valence'] = preferences['valence_range'][0]
-                audio_params['max_valence'] = preferences['valence_range'][1]
-
-        try:
-            recs = await self.spotify.get_recommendations(
-                seed_tracks=seed_ids,
-                limit=min(limit, 100),
-                **audio_params
-            )
-
-            for track in recs:
-                if track.id not in seen_ids:
-                    candidates.append(track)
-                    seen_ids.add(track.id)
-        except Exception as e:
-            print(f"Error getting Spotify recommendations: {e}")
-
-        # Also get top tracks from related artists
-        if len(candidates) < limit:
+        # Search for more tracks by each artist
+        for artist_name in artists[:5]:  # Limit to 5 artists
             try:
-                for input_track in input_tracks[-2:]:
-                    related = await self.spotify.get_related_artists(input_track.artist_id)
-                    for artist in related[:3]:
-                        top_tracks = await self.spotify.get_artist_top_tracks(artist['id'])
-                        for track in top_tracks[:3]:
-                            if track.id not in seen_ids:
-                                candidates.append(track)
-                                seen_ids.add(track.id)
+                # Search for tracks by this artist
+                search_results = await self.spotify.search_tracks(
+                    f'artist:"{artist_name}"',
+                    limit=20
+                )
+
+                for track in search_results:
+                    if track.id not in seen_ids:
+                        candidates.append(track)
+                        seen_ids.add(track.id)
+
+                        if len(candidates) >= limit:
+                            break
+
+            except Exception as e:
+                print(f"Error searching for artist '{artist_name}': {e}")
+
+            if len(candidates) >= limit:
+                break
+
+        # If still need more, search by genre keywords from track/album names
+        if len(candidates) < limit:
+            # Extract keywords from track names
+            keywords = set()
+            for track in input_tracks[:3]:
+                # Use artist name variations for discovery
+                words = track.artist_name.split()
+                if len(words) > 1:
+                    keywords.add(words[0])  # First name
+
+            for keyword in list(keywords)[:3]:
+                try:
+                    search_results = await self.spotify.search_tracks(keyword, limit=10)
+                    for track in search_results:
+                        if track.id not in seen_ids:
+                            candidates.append(track)
+                            seen_ids.add(track.id)
 
                             if len(candidates) >= limit:
                                 break
-                        if len(candidates) >= limit:
-                            break
-                    if len(candidates) >= limit:
-                        break
-            except Exception as e:
-                print(f"Error getting related artist tracks: {e}")
+                except Exception as e:
+                    print(f"Error searching for '{keyword}': {e}")
+
+                if len(candidates) >= limit:
+                    break
 
         return candidates[:limit]
 
