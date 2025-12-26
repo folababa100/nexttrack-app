@@ -18,6 +18,15 @@ from pydantic import BaseModel, Field
 
 from spotify_client import SpotifyClient
 from engine import RecommendationEngine
+from musicbrainz_client import MusicBrainzClient
+from wikidata_client import WikidataClient
+
+# Try to import enhanced engine (optional)
+try:
+    from enhanced_engine import EnhancedRecommendationEngine
+    ENHANCED_ENGINE_AVAILABLE = True
+except ImportError:
+    ENHANCED_ENGINE_AVAILABLE = False
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,22 +34,40 @@ load_dotenv()
 # Global instances
 spotify_client: Optional[SpotifyClient] = None
 recommendation_engine: Optional[RecommendationEngine] = None
+musicbrainz_client: Optional[MusicBrainzClient] = None
+wikidata_client: Optional[WikidataClient] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle."""
-    global spotify_client, recommendation_engine
+    global spotify_client, recommendation_engine, musicbrainz_client, wikidata_client
 
     # Get credentials from environment
     client_id = os.environ.get('SPOTIFY_CLIENT_ID', '')
     client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET', '')
     market = os.environ.get('SPOTIFY_MARKET', 'US')
+    use_enhanced = os.environ.get('USE_ENHANCED_ENGINE', 'false').lower() == 'true'
 
     if client_id and client_secret:
         spotify_client = SpotifyClient(client_id, client_secret, market=market)
-        recommendation_engine = RecommendationEngine(spotify_client)
-        print("✓ Spotify client initialized")
+
+        # Initialize optional external data sources
+        musicbrainz_client = MusicBrainzClient()
+        wikidata_client = WikidataClient()
+
+        # Use enhanced engine if available and enabled
+        if use_enhanced and ENHANCED_ENGINE_AVAILABLE:
+            from enhanced_engine import EnhancedRecommendationEngine
+            recommendation_engine = EnhancedRecommendationEngine(
+                spotify_client,
+                musicbrainz_client,
+                wikidata_client
+            )
+            print("✓ Enhanced recommendation engine initialized (with MusicBrainz + Wikidata)")
+        else:
+            recommendation_engine = RecommendationEngine(spotify_client)
+            print("✓ Spotify client and recommendation engine initialized")
     else:
         print("⚠ Warning: Spotify credentials not set. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET")
 
@@ -49,6 +76,11 @@ async def lifespan(app: FastAPI):
     # Cleanup
     if spotify_client:
         await spotify_client.close()
+    if musicbrainz_client:
+        await musicbrainz_client.close()
+    if wikidata_client:
+        await wikidata_client.close()
+
 
 
 # Initialize FastAPI
