@@ -1,21 +1,24 @@
 # NextTrack API - Requirements
 # Privacy-focused music recommendation API
+# CM3035 Advanced Web Design Final Project
 
-# Web Framework
+# ============== Web Framework ==============
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 
-# Data Validation
+# ============== Data Validation ==============
 pydantic>=2.5.0
 
-# HTTP Client (async)
+# ============== HTTP Client (async) ==============
 httpx>=0.25.0
 
-# Environment variables
+# ============== Environment Configuration ==============
 python-dotenv>=1.0.0
 
-# Testing
+# ============== Testing ==============
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
-python-dotenv
-python-dotenv
+
+# ============== Notes ==============
+# No additional dependencies needed for MusicBrainz/Wikidata clients
+# as they use httpx for HTTP requests and standard library for SPARQL

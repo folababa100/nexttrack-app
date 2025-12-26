@@ -4,11 +4,22 @@ A RESTful API that provides intelligent music recommendations without user track
 
 ## 🎯 Project Overview
 
+**CM3035 Advanced Web Design - Final Project**
+
 NextTrack is a stateless music recommendation system that:
 - Accepts a sequence of track identifiers with each request
-- Computes audio feature similarity using Spotify's audio analysis
+- Computes audio feature similarity using multiple data sources
+- Integrates Spotify, MusicBrainz, and Wikidata for recommendations
 - Returns relevant recommendations with confidence scores
 - **Never stores user data** - completely privacy-preserving
+
+### Key Features
+
+- 🔒 **Privacy-First**: No user tracking, profiling, or data retention
+- 🎵 **Multi-Source**: Combines Spotify, MusicBrainz, and Wikidata
+- 🎯 **Smart Recommendations**: Audio similarity + genre matching + diversity
+- 🌐 **RESTful API**: Well-documented endpoints with OpenAPI specs
+- 🖥️ **Web Demo**: Interactive UI for testing recommendations
 
 ## 🚀 Quick Start
 
@@ -28,7 +39,7 @@ NextTrack is a stateless music recommendation system that:
 
 ```bash
 # Navigate to project directory
-cd /Users/folababa/Downloads/final-project
+cd final-project
 
 # Create virtual environment
 python3 -m venv venv
@@ -40,7 +51,10 @@ pip install -r requirements.txt
 # Set environment variables
 export SPOTIFY_CLIENT_ID="your_client_id_here"
 export SPOTIFY_CLIENT_SECRET="your_client_secret_here"
-export SPOTIFY_MARKET="US"  # Optional fallback country code for catalog requests
+export SPOTIFY_MARKET="US"  # Optional: country code for catalog
+
+# Optional: Enable enhanced multi-strategy engine
+export USE_ENHANCED_ENGINE=true
 
 # Run the server
 cd src
@@ -122,18 +136,58 @@ GET /api/health
 ```
 final-project/
 ├── src/
-│   ├── main.py              # FastAPI application
-│   ├── spotify_client.py    # Spotify API integration
-│   ├── engine.py            # Recommendation algorithms
+│   ├── main.py                  # FastAPI application & endpoints
+│   ├── spotify_client.py        # Spotify API integration
+│   ├── musicbrainz_client.py    # MusicBrainz API for genres
+│   ├── wikidata_client.py       # Wikidata SPARQL for context
+│   ├── engine.py                # Basic recommendation engine
+│   ├── enhanced_engine.py       # Multi-strategy engine
 │   └── static/
-│       └── index.html       # Web demo interface
+│       └── index.html           # Web demo interface
+├── tests/
+│   ├── conftest.py              # Test configuration
+│   └── test_engine.py           # Unit tests
 ├── docs/
-│   ├── preliminary_report.md
-│   └── NextTrack_Preliminary_Report.docx
+│   ├── PROGRESS.md              # Development progress tracker
+│   ├── preliminary_report.md    # Academic report
+│   └── video_script.md          # Demo video script
 ├── requirements.txt
-├── .env.example
+├── pytest.ini
 └── README.md
 ```
+
+## 🔬 Recommendation Strategies
+
+### 1. Audio Feature Similarity
+Uses weighted Euclidean distance between audio features (energy, valence, danceability, etc.)
+
+### 2. Artist-Based Discovery
+Finds more tracks by artists in your listening history
+
+### 3. Genre Matching (MusicBrainz)
+Retrieves genre tags and finds tracks with similar genres
+
+### 4. Cultural Context (Wikidata)
+Uses artist influences and era information for context-aware recommendations
+
+### 5. Diversity Injection
+Prevents homogeneous results by penalizing similar tracks
+
+## 🧪 Running Tests
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage (if coverage installed)
+pytest tests/ -v --cov=src
+```
+
+## 📝 Documentation
+
+- [Progress Tracker](docs/PROGRESS.md) - Development status and completed features
+- [Preliminary Report](docs/preliminary_report.md) - Academic documentation
+- [API Docs](http://localhost:8000/docs) - Interactive OpenAPI documentation (when running)
 
 ## 🎥 Demo Video Tips
 
