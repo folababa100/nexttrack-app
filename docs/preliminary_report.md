@@ -6,8 +6,8 @@
 
 **Project Type:** RESTful API Development
 **Course:** CM3035 Advanced Web Design
-**Date:** December 5, 2025
-**Word Count:** ~5,800 words (excluding references)
+**Date:** December 2025
+**Word Count:** ~5,000 words (excluding references)
 
 ---
 
@@ -146,9 +146,9 @@ The statelessness constraint is particularly significant for NextTrack. Fielding
 
 Modern API design has evolved beyond Fielding's original work to establish practical patterns for web service development. Richardson and Ruby (2007) provide comprehensive guidance on RESTful web services, emphasizing resource-oriented design and appropriate HTTP method usage.
 
-The OpenAPI Specification (formerly Swagger) has emerged as the industry standard for API documentation (OpenAPI Initiative, 2021). This machine-readable format enables automatic generation of documentation, client libraries, and testing tools. NextTrack will adopt OpenAPI 3.0 specification for comprehensive API documentation.
+The OpenAPI Specification (formerly Swagger) has emerged as the industry standard for API documentation (OpenAPI Initiative, 2021). This machine-readable format enables automatic generation of documentation, client libraries, and testing tools. NextTrack adopts OpenAPI 3.0 specification through FastAPI's automatic documentation generation.
 
-API versioning strategies are critical for long-term maintainability. Masse (2011) recommends URI path versioning (e.g., /api/v1/resource) for its simplicity and discoverability, an approach NextTrack will adopt.
+API versioning strategies are critical for long-term maintainability. Masse (2011) recommends URI path versioning (e.g., /api/v1/resource) for its simplicity and discoverability, an approach NextTrack employs.
 
 ### 2.3.3 API Security Considerations
 
@@ -242,7 +242,7 @@ NextTrack employs a three-tier architecture designed for modularity, scalability
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                      API Layer                               │
-│                   (Flask/FastAPI)                           │
+│                      (FastAPI)                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
 │  │   Routes    │  │ Validation  │  │  Response Handling  │ │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘ │
@@ -302,7 +302,7 @@ The data integration layer abstracts external API interactions, providing consis
 - Manages caching to reduce API calls and latency
 - Handles errors and rate limiting gracefully
 
-Redis provides the caching layer, storing external API responses with configurable TTL values. This reduces latency and ensures the system remains functional during temporary external API outages.
+The architecture design includes Redis as a caching layer for storing external API responses with configurable TTL values. This would reduce latency and ensure the system remains functional during temporary external API outages. *Note: Redis caching is designed but not yet implemented in the current prototype.*
 
 ## 3.2 API Specification
 
@@ -453,11 +453,11 @@ External API calls represent the primary latency source. The caching strategy mi
 
 | Data Type | Cache TTL | Rationale |
 |-----------|-----------|-----------|
-| Audio Features | 7 days | Immutable for released tracks |
 | Track Metadata | 24 hours | Rarely changes |
 | Artist Info | 24 hours | Occasionally updated |
-| Genre Mappings | 7 days | Stable categorizations |
 | Search Results | 1 hour | May change with catalog updates |
+
+*Note: Audio Features caching was planned but is not currently implemented due to Spotify API deprecations (see §4.4).*
 
 Cache keys are constructed from normalized identifiers to ensure consistency across data sources.
 
@@ -489,7 +489,7 @@ A web-based demonstration interface will showcase API capabilities:
 - **Result display:** Show recommendations with reasoning explanations
 - **Playback integration:** Preview tracks using Spotify embeds
 
-The interface will be built using React with a responsive design suitable for desktop and mobile use.
+The interface is built using vanilla HTML, CSS, and JavaScript with a responsive design suitable for desktop and mobile use. This lightweight approach avoids framework complexity while demonstrating core API functionality.
 
 ## 3.9 Work Plan
 
@@ -524,9 +524,9 @@ Evaluation will combine quantitative metrics and qualitative user feedback:
 
 ## 4.1 Prototype Overview
 
-This chapter presents the implementation of NextTrack's core feature prototype: the audio feature similarity recommendation engine. This prototype demonstrates the technical feasibility of generating meaningful music recommendations using a stateless, privacy-preserving approach.
+This chapter presents the implementation of NextTrack's core feature prototype: the search-based recommendation engine. This prototype demonstrates the technical feasibility of generating meaningful music recommendations using a stateless, privacy-preserving approach.
 
-The prototype implements the audio feature similarity strategy described in Chapter 3, integrating with Spotify's Web API to retrieve audio features and compute track similarity scores. This feature was selected for initial prototyping because:
+The prototype implements artist-based discovery as described in Chapter 3, integrating with Spotify's Web API to search and retrieve track metadata. This feature was selected for initial prototyping because:
 
 1. It represents the most technically challenging aspect of the recommendation system
 2. Audio feature similarity forms the foundation upon which other strategies build
@@ -540,16 +540,16 @@ The prototype implements the audio feature similarity strategy described in Chap
 The prototype is implemented using:
 - **Python 3.11** as the primary programming language
 - **FastAPI** for the API framework
-- **Spotipy** library for Spotify API integration
-- **NumPy** for numerical computations
-- **Redis** for response caching
+- **httpx** for asynchronous Spotify API integration
+- **Pydantic** for data validation and serialization
+- **python-dotenv** for environment configuration
 
 ### 4.2.2 Core Algorithm Implementation
 
-The similarity calculation implements weighted Euclidean distance across normalized audio features:
+The recommendation engine includes an audio feature similarity module designed for weighted Euclidean distance calculations. While this code is implemented, it currently returns default values due to Spotify API limitations (see §4.4):
 
 ```python
-import numpy as np
+import math
 from typing import List, Dict
 
 class AudioFeatureSimilarity:
@@ -568,12 +568,14 @@ class AudioFeatureSimilarity:
         centroid = {}
 
         # Weight recent tracks more heavily
-        weights = np.array([0.5 ** i for i in range(len(tracks))])
-        weights = weights / weights.sum()
+        n = len(tracks)
+        weights = [0.5 ** i for i in range(n)]
+        total_weight = sum(weights)
+        weights = [w / total_weight for w in weights]
 
         for feature in features:
             values = [t['audio_features'][feature] for t in tracks]
-            centroid[feature] = np.average(values, weights=weights)
+            centroid[feature] = sum(v * w for v, w in zip(values, weights))
 
         return centroid
 
@@ -589,7 +591,7 @@ class AudioFeatureSimilarity:
             weighted_diff_sq += weight * (diff ** 2)
             total_weight += weight
 
-        distance = np.sqrt(weighted_diff_sq / total_weight)
+        distance = math.sqrt(weighted_diff_sq / total_weight)
         similarity = 1 - distance  # Convert distance to similarity
 
         return max(0, min(1, similarity))  # Clamp to [0, 1]
@@ -641,6 +643,7 @@ This approach maintains cultural coherence by recommending tracks from the same 
 ### 4.2.4 API Endpoint Implementation
 
 ```python
+import time
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -798,11 +801,11 @@ Based on evaluation results and API constraints, the following improvements are 
 
 ## 4.6 Conclusion
 
-The feature prototype successfully demonstrates that meaningful music recommendations can be generated using a stateless, privacy-preserving approach. The audio feature similarity algorithm significantly outperforms random selection while maintaining computational efficiency suitable for real-time API responses.
+The feature prototype successfully demonstrates that meaningful music recommendations can be generated using a stateless, privacy-preserving approach. The search-based discovery algorithm significantly outperforms random selection while maintaining computational efficiency suitable for real-time API responses.
 
 User feedback confirms that the approach produces subjectively satisfying recommendations, though opportunities exist for improvement through strategy diversification and enhanced explanations. The prototype validates the core technical premise of NextTrack and provides a solid foundation for full system implementation.
 
-The evaluation results also highlight the importance of the multi-strategy approach outlined in the design chapter. While audio feature similarity alone produces competent recommendations, integration with metadata matching and diversity injection will be essential for production-quality results.
+The evaluation results also highlight the importance of the multi-strategy approach outlined in the design chapter. While artist-based search alone produces competent recommendations, integration with metadata matching and diversity injection would be valuable enhancements for production-quality results.
 
 ---
 
