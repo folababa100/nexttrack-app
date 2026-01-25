@@ -378,6 +378,24 @@ class RecommendationEngine:
 
         analysis = {}
 
+        # Calculate average features
+        avg_features = {}
+        feature_list = ['energy', 'valence', 'tempo', 'danceability', 'acousticness']
+
+        for feature in feature_list:
+            values = []
+            for t in tracks_with_features:
+                val = getattr(t.audio_features, feature, None)
+                if val is not None:
+                    if feature == 'tempo':
+                        val = self.similarity.normalize('tempo', val)
+                    values.append(val)
+            if values:
+                avg_features[feature] = sum(values) / len(values)
+
+        analysis['average_features'] = avg_features
+
+        # Calculate trends
         for feature in ['energy', 'valence', 'tempo', 'danceability']:
             values = []
             for t in tracks_with_features:
@@ -408,5 +426,9 @@ class RecommendationEngine:
                 # Variance
                 variance = sum((v - y_mean) ** 2 for v in values) / n
                 analysis[f'{feature}_consistency'] = 'high' if variance < 0.05 else 'low'
+
+        # Add mood trend alias for valence
+        if 'valence_trend' in analysis:
+            analysis['mood_trend'] = analysis['valence_trend']
 
         return analysis

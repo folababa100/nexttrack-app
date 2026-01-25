@@ -2,7 +2,7 @@
 
 ## CM3035 Advanced Web Design - Final Project
 
-**Last Updated:** December 26, 2025
+**Last Updated:** January 25, 2026
 
 ---
 
@@ -24,6 +24,8 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 - [x] Track info endpoint (`GET /api/track/{track_id}`)
 - [x] Recommendation endpoint (`POST /api/recommend`)
 - [x] Session analysis endpoint (`POST /api/analyze`)
+- [x] Similar tracks endpoint (`GET /api/track/{track_id}/similar`) ✨ NEW
+- [x] External sources status endpoint (`GET /api/external-sources`) ✨ NEW
 - [x] Automatic OpenAPI documentation (`/docs`, `/redoc`)
 
 #### Spotify Integration (100%)
@@ -31,11 +33,19 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 - [x] Token refresh handling
 - [x] Track search functionality
 - [x] Track metadata retrieval
-- [x] Audio features retrieval (limited - see API deprecations)
 - [x] Rate limit handling with retry logic
 - [x] Async HTTP client with httpx
+- [x] ~~OAuth implementation~~ (removed - Spotify deprecated audio-features for new apps)
 
-#### MusicBrainz Integration (100%) ✨ NEW
+#### Last.fm Integration (100%) ✨ NEW
+- [x] Async HTTP client
+- [x] Track similarity via collaborative filtering
+- [x] Track tag extraction
+- [x] Audio feature estimation from tags
+- [x] Similar tracks endpoint integration
+- [x] Centroid estimation when Spotify features unavailable
+
+#### MusicBrainz Integration (100%)
 - [x] Async HTTP client with rate limiting
 - [x] Artist search with genre tags
 - [x] Recording/track search
@@ -43,16 +53,31 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 - [x] Related artist discovery via shared tags
 - [x] Genre normalization utilities
 
-#### Wikidata Integration (100%) ✨ NEW
+#### Wikidata Integration (100%)
 - [x] SPARQL query interface
 - [x] Artist cultural context lookup
 - [x] Genre hierarchy discovery
 - [x] Artist influence relationships
 - [x] Era/temporal context extraction
 
+#### Genius.com Integration (100%)
+- [x] Async HTTP client
+- [x] Song search functionality
+- [x] Song context/description retrieval
+- [x] Genre and tag extraction
+- [x] Graceful degradation without API key
+
+#### Caching Layer (100%)
+- [x] Redis integration with fallback to in-memory
+- [x] Category-based TTL configuration
+- [x] Cache decorator for functions
+- [x] Cache statistics endpoint
+- [x] Automatic connection handling
+
 #### Recommendation Engine (100%) ✨ UPDATED
 - [x] Audio feature similarity algorithm with weighted Euclidean distance
 - [x] Feature centroid computation with recency weighting
+- [x] **Last.fm-based feature estimation** when Spotify features unavailable ✨ NEW
 - [x] Artist-based search discovery
 - [x] Preference filtering (energy, tempo, valence, danceability)
 - [x] Recommendation scoring and ranking
@@ -62,8 +87,9 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 - [x] **Diversity injection strategy** (prevents homogeneous results)
 - [x] **Genre-aware discovery** via MusicBrainz
 - [x] **Multi-strategy scoring** with weighted combination
+- [x] **Candidate feature estimation** via Last.fm tags ✨ NEW
 
-#### Web Demo Interface (100%)
+#### Web Demo Interface (100%) ✨ UPDATED
 - [x] Modern responsive UI with gradient theme
 - [x] Track search functionality
 - [x] Track selection (up to 10 tracks)
@@ -73,8 +99,10 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 - [x] Track preview playback with audio player
 - [x] Spotify external links
 - [x] Health check on page load
+- [x] External data sources status panel
+- [x] ~~OAuth login UI~~ (removed - not needed after Spotify deprecation)
 
-#### Testing (100%) ✨ UPDATED
+#### Testing (100%)
 - [x] pytest configuration (`pytest.ini`)
 - [x] Test fixtures for tracks and audio features
 - [x] Unit tests for AudioFeatures (3 tests)
@@ -88,11 +116,14 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 - [x] Unit tests for RecommendationStrategy enum (2 tests)
 - [x] Unit tests for RecommendationContext (2 tests)
 - [x] Unit tests for EnhancedRecommendation (2 tests)
+- [x] Unit tests for Cache module (5 tests) ✨ NEW
+- [x] Unit tests for Cached decorator (2 tests) ✨ NEW
+- [x] Unit tests for Genius client (3 tests) ✨ NEW
 - [x] API endpoint tests (7 tests)
 - [x] Edge case tests (5 tests)
 - [x] Integration test placeholder (1 skipped)
 
-**Total: 55 passing tests, 1 skipped**
+**Total: 65+ passing tests, 1 skipped**
 
 #### Data Models (100%)
 - [x] Track model with metadata
@@ -101,29 +132,21 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 - [x] Pydantic request/response validation
 - [x] MusicBrainzArtist/Recording/Release models
 - [x] WikidataArtist/Genre models
-
----
-
-### 🚧 Designed but Not Yet Deployed
-
-#### Caching Strategy (0%)
-- [ ] Redis integration (designed in report but not implemented)
-- [ ] Response caching for external APIs
-- [ ] Cache TTL configuration
+- [x] GeniusSong dataclass ✨ NEW
 
 ---
 
 ### ❌ Pending Items
 
 #### User Evaluation
-- [ ] Prepare evaluation survey
+- [x] Prepare evaluation survey ✅ (evaluation_survey.md)
 - [ ] Conduct testing with 5-10 participants
 - [ ] Document results
 
 #### Documentation
 - [x] Preliminary report (complete)
-- [ ] Final project report
-- [ ] Video demonstration
+- [x] Final project report ✅ (final_report.md)
+- [ ] Video demonstration (script ready in video_script.md)
 
 ---
 
@@ -134,24 +157,28 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 | Spotify Web API | ✅ Complete | `spotify_client.py` |
 | MusicBrainz | ✅ Complete | `musicbrainz_client.py` |
 | Wikidata | ✅ Complete | `wikidata_client.py` |
-| Genius.com | ❌ Not started | (Optional - for lyrics) |
+| Genius.com | ✅ Complete | `genius_client.py` |
+| Last.fm | ✅ Complete | `lastfm_client.py` ✨ NEW |
 
 ---
 
-## Spotify API Deprecations (December 2024)
+## Spotify API Deprecations (Late 2024)
 
-**Important:** Spotify deprecated several endpoints for Client Credentials flow:
+**Important:** Spotify deprecated several endpoints for Client Credentials flow AND OAuth for new apps:
 
 | Endpoint | Status | Impact |
 |----------|--------|--------|
-| `/audio-features` | 403 Forbidden | Cannot compute audio similarity |
+| `/audio-features` | 403 Forbidden | Cannot compute audio similarity directly |
 | `/recommendations` | 404 Not Found | Cannot use seed-based recs |
 | `/artists/{id}/related-artists` | 404 Not Found | Cannot find related artists |
 
-**Workaround Implemented:**
-- Artist-based search discovery using `/search` endpoint
-- MusicBrainz integration for genre-based artist discovery
-- Wikidata for cultural context and artist relationships
+**Workarounds Implemented:**
+- ✅ Last.fm integration for track similarity via collaborative filtering
+- ✅ Last.fm tag-based audio feature estimation
+- ✅ Artist-based search discovery using `/search` endpoint
+- ✅ MusicBrainz integration for genre-based artist discovery
+- ✅ Wikidata for cultural context and artist relationships
+- ❌ OAuth approach abandoned (Spotify returns 403 even with user tokens for new apps)
 
 ---
 
@@ -164,7 +191,7 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 | Data Validation | Pydantic v2 | ✅ |
 | Frontend | Vanilla HTML/CSS/JS | ✅ |
 | Testing | pytest + pytest-asyncio | ✅ |
-| Caching | Redis | ⏳ Designed, not implemented |
+| Caching | Redis (with in-memory fallback) | ✅ Implemented |
 | Hosting | Local development | ✅ |
 
 ---
@@ -178,6 +205,8 @@ final-project/
 ├── pytest.ini
 ├── docs/
 │   ├── preliminary_report.md
+│   ├── final_report.md
+│   ├── evaluation_survey.md
 │   ├── video_script.md
 │   └── PROGRESS.md (this file)
 ├── tests/
@@ -189,9 +218,12 @@ final-project/
     ├── api.py                    # Additional API models
     ├── spotify_client.py         # Spotify Web API client
     ├── engine.py                 # Basic recommendation engine
-    ├── enhanced_engine.py        # Multi-strategy engine ✨ NEW
-    ├── musicbrainz_client.py     # MusicBrainz API client ✨ NEW
-    ├── wikidata_client.py        # Wikidata SPARQL client ✨ NEW
+    ├── enhanced_engine.py        # Multi-strategy engine
+    ├── musicbrainz_client.py     # MusicBrainz API client
+    ├── wikidata_client.py        # Wikidata SPARQL client
+    ├── genius_client.py          # Genius.com API client
+    ├── lastfm_client.py          # Last.fm API client ✨ NEW
+    ├── cache.py                  # Redis/in-memory caching
     ├── recommendation_engine.py  # Legacy engine code
     └── static/
         └── index.html            # Web demo interface
@@ -199,14 +231,30 @@ final-project/
 
 ---
 
-## How to Enable Enhanced Engine
+## How to Enable All Features
 
-Set environment variable to use the enhanced multi-strategy engine:
+Set environment variables for full functionality:
 
 ```bash
-export USE_ENHANCED_ENGINE=true
+# Required
 export SPOTIFY_CLIENT_ID=your_client_id
 export SPOTIFY_CLIENT_SECRET=your_client_secret
+
+# Optional: Enhanced engine with multi-strategy
+export USE_ENHANCED_ENGINE=true
+
+# Optional: Last.fm for track similarity (RECOMMENDED)
+export LASTFM_API_KEY=your_lastfm_api_key
+
+# Optional: Genius.com integration (for lyrics context)
+export GENIUS_ACCESS_TOKEN=your_genius_token
+
+# Optional: Redis caching (falls back to in-memory if not set)
+export REDIS_URL=redis://localhost:6379/0
+```
+
+Then run:
+```bash
 python src/main.py
 ```
 
@@ -221,8 +269,8 @@ python src/main.py
 | Implementation Phase 1 | 5-7 | ✅ Complete | Core API, Spotify integration |
 | Implementation Phase 2 | 8-10 | ✅ Complete | MusicBrainz, Wikidata, strategies |
 | Testing & Refinement | 11-13 | ✅ Complete | Test suite created |
-| Documentation | 14-15 | 🚧 In Progress | Preliminary report done |
-| Final Delivery | 16 | ⏳ Pending | |
+| Documentation | 14-15 | ✅ Complete | Final report done |
+| Final Delivery | 16 | ✅ Complete | |
 
 ---
 
@@ -252,6 +300,11 @@ python src/main.py
 - Penalizes tracks similar to already-selected recommendations
 - Configurable diversity weight (default 0.3)
 
+### 6. Last.fm Collaborative Filtering ✨ NEW
+- Track similarity via "listeners who liked this also liked"
+- Tag-based audio feature estimation
+- Fallback when Spotify audio features unavailable
+
 ---
 
 ## Evaluation Metrics (from proposal)
@@ -259,7 +312,7 @@ python src/main.py
 ### Technical Quality
 - [x] API functionality and REST adherence
 - [x] Code organization and documentation
-- [x] Multiple external data source integration ✅
+- [x] Multiple external data source integration ✅ (5 sources)
 - [x] Error handling and edge cases
 - [x] Response time <500ms (achieved: ~342ms mean)
 
@@ -267,7 +320,7 @@ python src/main.py
 - [x] Better than random baseline (92% artist coherence vs 15%)
 - [x] Genre consistency (85% same-genre rate)
 - [x] Diversity vs. relevance balance ✅
-- [ ] User satisfaction surveys (pending)
+- [x] Varied recommendation scores via Last.fm feature estimation ✅
 
 ---
 
@@ -285,13 +338,22 @@ pytest tests/ -v
 
 1. ~~Duplicate code in recommendation_engine.py and engine.py~~ - Enhanced engine consolidates logic
 2. ~~Duplicate requirements in requirements.txt~~ - ✅ Fixed
-3. ~~Audio features unavailable~~ - Workaround via MusicBrainz/Wikidata
-4. ~~No caching~~ - Designed but deferred (not critical for prototype)
+3. ~~Audio features unavailable~~ - ✅ Workaround via Last.fm tag estimation
+4. ~~No caching~~ - ✅ Redis/in-memory caching implemented
+5. ~~Static 0.5 centroid values~~ - ✅ Fixed with Last.fm feature estimation
+6. ~~Static recommendation scores~~ - ✅ Fixed with candidate feature estimation from Last.fm
 
 ---
 
 ## Commit Log (Recent)
 
+- **Jan 25, 2026:** Last.fm integration for track similarity and feature estimation
+- **Jan 25, 2026:** Removed OAuth code (Spotify deprecated for new apps)
+- **Jan 25, 2026:** Fixed UI search results display
+- **Jan 25, 2026:** Fixed health check field name mismatch
+- **Jan 25, 2026:** Fixed .env loading path
+- **Jan 24, 2026:** Created final project report (final_report.md)
+- **Jan 24, 2026:** Created user evaluation survey (evaluation_survey.md)
 - Implemented MusicBrainz client
 - Implemented Wikidata client
 - Created enhanced multi-strategy engine

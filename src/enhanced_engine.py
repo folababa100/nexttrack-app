@@ -32,6 +32,12 @@ from wikidata_client import (
     calculate_era_similarity
 )
 
+# Optional Last.fm client for feature estimation
+try:
+    from lastfm_client import LastFMClient
+except ImportError:
+    LastFMClient = None
+
 
 class RecommendationStrategy(Enum):
     """Available recommendation strategies."""
@@ -252,6 +258,7 @@ class EnhancedRecommendationEngine:
         spotify_client: SpotifyClient,
         musicbrainz_client: Optional[MusicBrainzClient] = None,
         wikidata_client: Optional[WikidataClient] = None,
+        lastfm_client: Optional['LastFMClient'] = None,
         diversity_weight: float = 0.3
     ):
         """
@@ -261,11 +268,13 @@ class EnhancedRecommendationEngine:
             spotify_client: Spotify API client (required)
             musicbrainz_client: MusicBrainz client (optional, for genre discovery)
             wikidata_client: Wikidata client (optional, for cultural context)
+            lastfm_client: Last.fm client (optional, for feature estimation)
             diversity_weight: Weight for diversity injection (0-1)
         """
         self.spotify = spotify_client
         self.musicbrainz = musicbrainz_client
         self.wikidata = wikidata_client
+        self.lastfm = lastfm_client
         self.diversity = DiversityInjector(diversity_weight)
         self.metadata_strategy = MetadataMatchingStrategy()
 
@@ -363,6 +372,15 @@ class EnhancedRecommendationEngine:
         # Deduplicate and limit genre profile
         genre_profile = list(dict.fromkeys(genre_profile))[:15]
 
+        # Try to get Last.fm tags and estimate features if no Spotify audio features
+        tracks_with_features = [t for t in input_tracks if t.audio_features]
+        if not tracks_with_features and self.lastfm:
+            # Estimate features from Last.fm tags
+            estimated_features = await self._estimate_features_from_lastfm(input_tracks)
+            self._estimated_features = estimated_features
+        else:
+            self._estimated_features = None
+
         # Compute audio feature centroid
         centroid = self._compute_centroid(input_tracks)
 
@@ -375,6 +393,40 @@ class EnhancedRecommendationEngine:
             era_range=(None, None)  # Could be extracted from release dates
         )
 
+    async def _estimate_features_from_lastfm(
+        self,
+        tracks: List[Track]
+    ) -> Dict[str, float]:
+        """Estimate audio features from Last.fm tags for input tracks."""
+        features = ['energy', 'valence', 'danceability', 'tempo', 'acousticness',
+                    'instrumentalness', 'speechiness', 'liveness']
+
+        all_estimated = []
+
+        for track in tracks[:5]:  # Limit API calls
+            try:
+                # Get tags from Last.fm
+                tags_result = await self.lastfm.get_track_tags(track.name, track.artist_name)
+                if tags_result and tags_result.tags:
+                    # Estimate features from tags
+                    estimated = self.lastfm.estimate_audio_features_from_tags(tags_result)
+                    if estimated and 'source' in estimated:
+                        all_estimated.append(estimated)
+            except Exception:
+                continue
+
+        if not all_estimated:
+            # Return default if estimation failed
+            return {f: 0.5 for f in features}
+
+        # Average the estimated features across all tracks
+        centroid = {}
+        for feature in features:
+            values = [e.get(feature, 0.5) for e in all_estimated]
+            centroid[feature] = sum(values) / len(values)
+
+        return centroid
+
     def _compute_centroid(
         self,
         tracks: List[Track],
@@ -385,6 +437,12 @@ class EnhancedRecommendationEngine:
                     'instrumentalness', 'speechiness', 'liveness']
 
         tracks_with_features = [t for t in tracks if t.audio_features]
+
+        # If no Spotify audio features, try using Last.fm estimated features
+        if not tracks_with_features and hasattr(self, '_estimated_features'):
+            # Use pre-computed estimated features from Last.fm
+            return self._estimated_features
+
         if not tracks_with_features:
             # Default centroid when no features available
             return {f: 0.5 for f in features}
@@ -506,13 +564,31 @@ class EnhancedRecommendationEngine:
         """Score and rank candidates using multiple strategies."""
         recommendations = []
 
+        # Pre-fetch Last.fm features for candidates without Spotify audio features
+        candidate_features = {}
+        if self.lastfm:
+            tracks_needing_features = [t for t in candidates if not t.audio_features]
+            # Limit to avoid too many API calls
+            for track in tracks_needing_features[:20]:
+                try:
+                    tags_result = await self.lastfm.get_track_tags(track.name, track.artist_name)
+                    if tags_result and tags_result.tags:
+                        estimated = self.lastfm.estimate_audio_features_from_tags(tags_result)
+                        if estimated:
+                            candidate_features[track.id] = estimated
+                except Exception:
+                    pass
+
         for track in candidates:
             strategy_scores = {}
             reasoning = []
             track_genres = candidate_genres.get(track.id, [])
 
+            # Get estimated features for this candidate
+            estimated_features = candidate_features.get(track.id)
+
             # Strategy 1: Audio feature similarity
-            audio_score = self._compute_audio_similarity(track, context)
+            audio_score = self._compute_audio_similarity(track, context, estimated_features)
             strategy_scores[RecommendationStrategy.AUDIO_SIMILARITY.value] = audio_score
             if audio_score >= 0.7:
                 reasoning.append("strong_audio_match")
@@ -566,33 +642,54 @@ class EnhancedRecommendationEngine:
     def _compute_audio_similarity(
         self,
         track: Track,
-        context: RecommendationContext
+        context: RecommendationContext,
+        candidate_estimated_features: Optional[Dict[str, float]] = None
     ) -> float:
         """Compute audio feature similarity to centroid."""
-        if not track.audio_features:
-            return 0.5  # Neutral score when features unavailable
-
-        af = track.audio_features
         centroid = context.feature_centroid
 
-        features = ['energy', 'valence', 'danceability', 'acousticness']
-        weights = [1.0, 0.9, 0.85, 0.6]
+        # Use actual audio features if available
+        if track.audio_features:
+            af = track.audio_features
+            features = ['energy', 'valence', 'danceability', 'acousticness']
+            weights = [1.0, 0.9, 0.85, 0.6]
 
-        weighted_dist_sq = 0
-        total_weight = 0
+            weighted_dist_sq = 0
+            total_weight = 0
 
-        for feature, weight in zip(features, weights):
-            val = getattr(af, feature, 0.5)
-            cent_val = centroid.get(feature, 0.5)
+            for feature, weight in zip(features, weights):
+                val = getattr(af, feature, 0.5)
+                cent_val = centroid.get(feature, 0.5)
 
-            diff = abs(val - cent_val)
-            weighted_dist_sq += weight * (diff ** 2)
-            total_weight += weight
+                diff = abs(val - cent_val)
+                weighted_dist_sq += weight * (diff ** 2)
+                total_weight += weight
 
-        distance = math.sqrt(weighted_dist_sq / total_weight) if total_weight else 0
-        similarity = 1 - distance
+            distance = math.sqrt(weighted_dist_sq / total_weight) if total_weight else 0
+            similarity = 1 - distance
+            return max(0, min(1, similarity))
 
-        return max(0, min(1, similarity))
+        # Use estimated features if provided (from Last.fm)
+        if candidate_estimated_features:
+            features = ['energy', 'valence', 'danceability', 'acousticness']
+            weights = [1.0, 0.9, 0.85, 0.6]
+
+            weighted_dist_sq = 0
+            total_weight = 0
+
+            for feature, weight in zip(features, weights):
+                val = candidate_estimated_features.get(feature, 0.5)
+                cent_val = centroid.get(feature, 0.5)
+
+                diff = abs(val - cent_val)
+                weighted_dist_sq += weight * (diff ** 2)
+                total_weight += weight
+
+            distance = math.sqrt(weighted_dist_sq / total_weight) if total_weight else 0
+            similarity = 1 - distance
+            return max(0, min(1, similarity))
+
+        return 0.5  # Neutral score when features unavailable
 
     def _passes_filters(self, track: Track, preferences: Dict) -> bool:
         """Check if track passes preference filters."""

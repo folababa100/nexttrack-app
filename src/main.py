@@ -20,6 +20,9 @@ from spotify_client import SpotifyClient
 from engine import RecommendationEngine
 from musicbrainz_client import MusicBrainzClient
 from wikidata_client import WikidataClient
+from cache import cache
+from genius_client import GeniusClient
+from lastfm_client import LastFMClient, create_lastfm_client
 
 # Try to import enhanced engine (optional)
 try:
@@ -29,19 +32,29 @@ except ImportError:
     ENHANCED_ENGINE_AVAILABLE = False
 
 # Load environment variables from .env file
-load_dotenv()
+# Try both src/.env (when running from src/) and .env (when running from project root)
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    load_dotenv()  # Fallback to default behavior
 
 # Global instances
 spotify_client: Optional[SpotifyClient] = None
 recommendation_engine: Optional[RecommendationEngine] = None
 musicbrainz_client: Optional[MusicBrainzClient] = None
 wikidata_client: Optional[WikidataClient] = None
+genius_client: Optional[GeniusClient] = None
+lastfm_client: Optional[LastFMClient] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle."""
-    global spotify_client, recommendation_engine, musicbrainz_client, wikidata_client
+    global spotify_client, recommendation_engine, musicbrainz_client, wikidata_client, genius_client, lastfm_client
+
+    # Initialize cache (Redis or fallback to in-memory)
+    await cache.connect()
 
     # Get credentials from environment
     client_id = os.environ.get('SPOTIFY_CLIENT_ID', '')
@@ -55,6 +68,19 @@ async def lifespan(app: FastAPI):
         # Initialize optional external data sources
         musicbrainz_client = MusicBrainzClient()
         wikidata_client = WikidataClient()
+        genius_client = GeniusClient()
+
+        if genius_client.is_configured:
+            print("✓ Genius.com client initialized")
+        else:
+            print("ℹ Genius.com API not configured (set GENIUS_ACCESS_TOKEN for lyrics context)")
+
+        # Initialize Last.fm client for track similarity
+        lastfm_client = create_lastfm_client()
+        if lastfm_client:
+            print("✓ Last.fm client initialized (for track similarity data)")
+        else:
+            print("ℹ Last.fm API not configured (set LASTFM_API_KEY for enhanced similarity)")
 
         # Use enhanced engine if available and enabled
         if use_enhanced and ENHANCED_ENGINE_AVAILABLE:
@@ -62,9 +88,10 @@ async def lifespan(app: FastAPI):
             recommendation_engine = EnhancedRecommendationEngine(
                 spotify_client,
                 musicbrainz_client,
-                wikidata_client
+                wikidata_client,
+                lastfm_client
             )
-            print("✓ Enhanced recommendation engine initialized (with MusicBrainz + Wikidata)")
+            print("✓ Enhanced recommendation engine initialized (with MusicBrainz + Wikidata + Last.fm)")
         else:
             recommendation_engine = RecommendationEngine(spotify_client)
             print("✓ Spotify client and recommendation engine initialized")
@@ -80,7 +107,11 @@ async def lifespan(app: FastAPI):
         await musicbrainz_client.close()
     if wikidata_client:
         await wikidata_client.close()
-
+    if genius_client:
+        await genius_client.close()
+    if lastfm_client:
+        await lastfm_client.close()
+    await cache.close()
 
 
 # Initialize FastAPI
@@ -117,44 +148,66 @@ class Preferences(BaseModel):
     """Recommendation preference parameters."""
     energy_range: Optional[List[float]] = Field(
         default=None,
-        description="Energy range [min, max] from 0-1"
+        min_length=2,
+        max_length=2,
+        description="[min, max] energy range (0-1)"
     )
     tempo_range: Optional[List[float]] = Field(
         default=None,
-        description="Tempo range [min, max] in BPM"
+        min_length=2,
+        max_length=2,
+        description="[min, max] tempo range in BPM"
     )
     valence_range: Optional[List[float]] = Field(
         default=None,
-        description="Mood/valence range [min, max] from 0-1"
+        min_length=2,
+        max_length=2,
+        description="[min, max] valence/mood range (0-1)"
     )
     danceability_range: Optional[List[float]] = Field(
         default=None,
-        description="Danceability range [min, max] from 0-1"
+        min_length=2,
+        max_length=2,
+        description="[min, max] danceability range (0-1)"
+    )
+    preferred_genres: Optional[List[str]] = Field(
+        default=None,
+        description="Preferred genre tags"
+    )
+    avoided_genres: Optional[List[str]] = Field(
+        default=None,
+        description="Genres to avoid"
+    )
+    diversity: Optional[float] = Field(
+        default=0.3,
+        ge=0.0,
+        le=1.0,
+        description="Diversity level (0=similar, 1=varied)"
     )
 
 
 class RecommendRequest(BaseModel):
-    """Request for track recommendations."""
+    """Recommendation request."""
     track_ids: List[str] = Field(
         ...,
         min_length=1,
-        max_length=20,
-        description="List of Spotify track IDs (recent listening history)"
+        max_length=10,
+        description="List of Spotify track IDs (1-10)"
     )
     preferences: Optional[Preferences] = Field(
         default=None,
-        description="Optional preference filters"
+        description="Optional filtering preferences"
     )
     limit: int = Field(
-        default=5,
+        default=10,
         ge=1,
-        le=20,
-        description="Number of recommendations"
+        le=50,
+        description="Number of recommendations (1-50)"
     )
 
 
 class TrackResponse(BaseModel):
-    """Track information in response."""
+    """Track data in response."""
     id: str
     name: str
     artist_name: str
@@ -162,36 +215,22 @@ class TrackResponse(BaseModel):
     album_image: Optional[str]
     preview_url: Optional[str]
     external_url: str
-    audio_features: Optional[Dict[str, float]]
+    audio_features: Optional[Dict] = None
 
 
 class RecommendationResponse(BaseModel):
-    """A single recommendation."""
+    """Single recommendation."""
     track: TrackResponse
-    score: float = Field(..., description="Confidence score 0-1")
-    reasoning: List[str] = Field(..., description="Why this was recommended")
+    score: float
+    reasoning: List[str]
 
 
 class RecommendResponse(BaseModel):
     """Full recommendation response."""
     recommendations: List[RecommendationResponse]
-    centroid: Dict[str, float] = Field(..., description="Computed feature profile")
+    centroid: Dict[str, float]
     request_id: str
     processing_time_ms: int
-
-
-class SearchResponse(BaseModel):
-    """Search results."""
-    tracks: List[TrackResponse]
-    query: str
-    total: int
-
-
-class HealthResponse(BaseModel):
-    """Health check response."""
-    status: str
-    spotify_connected: bool
-    version: str
 
 
 # ============== API Endpoints ==============
@@ -202,94 +241,75 @@ async def root():
     index_path = os.path.join(static_dir, 'index.html')
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    return {"message": "NextTrack API", "docs": "/docs"}
+    return {"message": "NextTrack API is running. See /docs for API documentation."}
 
 
-@app.get("/api/health", response_model=HealthResponse)
+@app.get("/api/health")
 async def health_check():
-    """Check API health status."""
-    return HealthResponse(
-        status="healthy",
-        spotify_connected=spotify_client is not None,
-        version="1.0.0"
-    )
+    """Health check endpoint."""
+    return {
+        "status": "healthy",
+        "spotify_configured": spotify_client is not None,
+        "engine_ready": recommendation_engine is not None,
+        "cache_enabled": cache.is_enabled
+    }
 
 
-@app.get("/api/search", response_model=SearchResponse)
+@app.get("/api/search")
 async def search_tracks(
-    q: str = Query(..., min_length=1, description="Search query"),
-    limit: int = Query(default=10, ge=1, le=50)
+    q: str = Query(..., min_length=1, max_length=100, description="Search query"),
+    limit: int = Query(default=10, ge=1, le=50, description="Max results")
 ):
     """
-    Search for tracks on Spotify.
-    Use this to find track IDs for the recommendation endpoint.
+    Search for tracks by name, artist, or album.
+
+    This is a pass-through to Spotify's search API.
+    No user data is stored.
     """
     if not spotify_client:
         raise HTTPException(503, "Spotify client not configured")
 
     try:
-        tracks = await spotify_client.search_tracks(q, limit)
-
-        return SearchResponse(
-            tracks=[
-                TrackResponse(
-                    id=t.id,
-                    name=t.name,
-                    artist_name=t.artist_name,
-                    album_name=t.album_name,
-                    album_image=t.album_image,
-                    preview_url=t.preview_url,
-                    external_url=t.external_url,
-                    audio_features=None
-                )
-                for t in tracks
-            ],
-            query=q,
-            total=len(tracks)
-        )
+        tracks = await spotify_client.search_tracks(q, limit=limit)
+        return {
+            "query": q,
+            "results": [t.to_dict() for t in tracks]
+        }
     except Exception as e:
         raise HTTPException(500, f"Search failed: {str(e)}")
 
 
 @app.get("/api/track/{track_id}")
 async def get_track(track_id: str):
-    """Get detailed track information including audio features."""
+    """
+    Get track details by Spotify ID.
+
+    Returns metadata only - no audio features due to Spotify API deprecation.
+    Use /api/track/{id}/similar for track similarity via Last.fm.
+    """
     if not spotify_client:
         raise HTTPException(503, "Spotify client not configured")
 
     try:
-        tracks = await spotify_client.get_tracks_with_features([track_id])
-        if not tracks:
-            raise HTTPException(404, "Track not found")
-
-        track = tracks[0]
-        return {
-            "id": track.id,
-            "name": track.name,
-            "artist_name": track.artist_name,
-            "album_name": track.album_name,
-            "album_image": track.album_image,
-            "preview_url": track.preview_url,
-            "external_url": track.external_url,
-            "popularity": track.popularity,
-            "duration_ms": track.duration_ms,
-            "audio_features": track.audio_features.to_dict() if track.audio_features else None
-        }
-    except HTTPException:
-        raise
+        track = await spotify_client.get_track(track_id)
+        return track.to_dict()
     except Exception as e:
-        raise HTTPException(500, f"Failed to get track: {str(e)}")
+        raise HTTPException(404 if "not found" in str(e).lower() else 500, str(e))
 
 
-@app.post("/api/recommend", response_model=RecommendResponse)
-async def recommend(request: RecommendRequest):
+@app.post("/api/recommend")
+async def get_recommendations(request: RecommendRequest):
     """
-    Get track recommendations based on listening history.
+    Get personalized track recommendations.
 
     This is the core NextTrack endpoint. It analyzes the provided tracks
     and returns similar recommendations WITHOUT storing any user data.
 
     The system is completely stateless - each request is independent.
+
+    Note: Audio features from Spotify are deprecated (late 2024).
+    Recommendations use artist/genre similarity, collaborative filtering
+    via Last.fm, and Spotify's recommendation algorithm.
     """
     if not recommendation_engine:
         raise HTTPException(503, "Recommendation engine not configured")
@@ -333,7 +353,8 @@ async def recommend(request: RecommendRequest):
                         external_url=rec.track.external_url,
                         audio_features=rec.track.audio_features.to_dict() if rec.track.audio_features else None
                     ),
-                    score=round(rec.score, 3),
+                    # Handle both Recommendation (score) and EnhancedRecommendation (final_score)
+                    score=round(getattr(rec, 'final_score', getattr(rec, 'score', 0.0)), 3),
                     reasoning=rec.reasoning
                 )
                 for rec in recommendations
@@ -349,17 +370,30 @@ async def recommend(request: RecommendRequest):
         raise HTTPException(500, f"Recommendation failed: {str(e)}")
 
 
+class AnalyzeRequest(BaseModel):
+    """Request for session analysis."""
+    track_ids: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        description="List of Spotify track IDs to analyze"
+    )
+
+
 @app.post("/api/analyze")
-async def analyze_session(track_ids: List[str]):
+async def analyze_session(request: AnalyzeRequest):
     """
     Analyze patterns in a listening session.
     Returns trends in energy, mood, tempo, etc.
+
+    Note: Due to Spotify API deprecation, analysis uses
+    Last.fm tags and genre inference instead of audio features.
     """
     if not recommendation_engine:
         raise HTTPException(503, "Recommendation engine not configured")
 
     try:
-        tracks = await spotify_client.get_tracks_with_features(track_ids)
+        tracks = await spotify_client.get_tracks_with_features(request.track_ids)
         analysis = recommendation_engine.analyze_session(tracks)
 
         return {
@@ -368,6 +402,159 @@ async def analyze_session(track_ids: List[str]):
         }
     except Exception as e:
         raise HTTPException(500, f"Analysis failed: {str(e)}")
+
+
+@app.get("/api/cache/stats")
+async def cache_stats():
+    """
+    Get cache statistics.
+    Shows hit/miss rates and backend status.
+    """
+    stats = await cache.get_stats()
+    return stats
+
+
+@app.post("/api/cache/clear")
+async def clear_cache(pattern: Optional[str] = None):
+    """
+    Clear cached data.
+    Optional pattern parameter to clear specific keys (e.g., 'search:*').
+    """
+    count = await cache.clear(pattern)
+    return {"cleared": count, "pattern": pattern or "*"}
+
+
+@app.get("/api/track/{track_id}/context")
+async def get_track_context(track_id: str):
+    """
+    Get extended track context from Genius.com.
+    Returns song description, tags, and cultural context when available.
+    """
+    if not spotify_client:
+        raise HTTPException(503, "Spotify client not configured")
+
+    if not genius_client or not genius_client.is_configured:
+        raise HTTPException(503, "Genius client not configured. Set GENIUS_ACCESS_TOKEN.")
+
+    try:
+        # Get track info first
+        tracks = await spotify_client.get_tracks_with_features([track_id])
+        if not tracks:
+            raise HTTPException(404, "Track not found")
+
+        track = tracks[0]
+
+        # Get Genius context
+        context = await genius_client.get_song_context(track.name, track.artist_name)
+
+        return {
+            "track": {
+                "id": track.id,
+                "name": track.name,
+                "artist_name": track.artist_name
+            },
+            "genius_context": context
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Failed to get track context: {str(e)}")
+
+
+@app.get("/api/track/{track_id}/similar")
+async def get_similar_tracks(
+    track_id: str,
+    limit: int = Query(default=10, ge=1, le=50)
+):
+    """
+    Get similar tracks using Last.fm's collaborative filtering.
+
+    This uses Last.fm's "listeners who liked this also liked" data
+    which is often more accurate than audio feature similarity.
+    """
+    if not spotify_client:
+        raise HTTPException(503, "Spotify client not configured")
+
+    if not lastfm_client:
+        raise HTTPException(503, "Last.fm not configured - set LASTFM_API_KEY")
+
+    try:
+        # Get track info from Spotify
+        tracks = await spotify_client.get_tracks([track_id])
+        if not tracks:
+            raise HTTPException(404, "Track not found")
+
+        track = tracks[0]
+
+        # Get similar tracks from Last.fm
+        similar = await lastfm_client.get_similar_tracks(
+            track_name=track.name,
+            artist_name=track.artist_name,
+            limit=limit
+        )
+
+        # Also get tags for the track
+        tags = await lastfm_client.get_track_tags(track.name, track.artist_name)
+
+        # Estimate audio features from tags
+        estimated_features = lastfm_client.estimate_audio_features_from_tags(tags)
+
+        return {
+            "track": {
+                "id": track.id,
+                "name": track.name,
+                "artist": track.artist_name
+            },
+            "tags": tags.tags,
+            "estimated_features": estimated_features,
+            "similar_tracks": [
+                {
+                    "name": s.name,
+                    "artist": s.artist,
+                    "match_score": round(s.match_score, 3),
+                    "url": s.url
+                }
+                for s in similar
+            ]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Failed to get similar tracks: {str(e)}")
+
+
+@app.get("/api/external-sources")
+async def external_sources_status():
+    """
+    Check status of all external data sources.
+    Useful for debugging and monitoring.
+    """
+    return {
+        "spotify": {
+            "configured": spotify_client is not None,
+            "description": "Track search, metadata, recommendations"
+        },
+        "musicbrainz": {
+            "configured": musicbrainz_client is not None,
+            "description": "Genre tags, open metadata"
+        },
+        "wikidata": {
+            "configured": wikidata_client is not None,
+            "description": "Artist relationships, cultural context"
+        },
+        "genius": {
+            "configured": genius_client is not None and genius_client.is_configured,
+            "description": "Song descriptions, lyrics context"
+        },
+        "lastfm": {
+            "configured": lastfm_client is not None,
+            "description": "Track similarity, collaborative filtering tags"
+        },
+        "cache": {
+            "enabled": cache.is_enabled,
+            "backend": "redis" if cache.is_enabled else "in-memory"
+        }
+    }
 
 
 # ============== Run Server ==============

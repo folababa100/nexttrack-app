@@ -3,7 +3,6 @@ Spotify API Client for NextTrack
 Handles all interactions with the Spotify Web API.
 """
 
-import os
 import base64
 import httpx
 from typing import List, Dict, Optional
@@ -74,12 +73,17 @@ class Track:
     popularity: int
     preview_url: Optional[str]
     external_url: str
+    isrc: Optional[str] = None  # International Standard Recording Code
     audio_features: Optional[AudioFeatures] = None
 
     @classmethod
     def from_spotify_response(cls, data: Dict) -> 'Track':
         album_images = data.get('album', {}).get('images', [])
         album_image = album_images[0]['url'] if album_images else None
+
+        # Extract ISRC from external_ids
+        external_ids = data.get('external_ids', {})
+        isrc = external_ids.get('isrc')
 
         return cls(
             id=data['id'],
@@ -91,7 +95,8 @@ class Track:
             duration_ms=data.get('duration_ms', 0),
             popularity=data.get('popularity', 0),
             preview_url=data.get('preview_url'),
-            external_url=data.get('external_urls', {}).get('spotify', '')
+            external_url=data.get('external_urls', {}).get('spotify', ''),
+            isrc=isrc
         )
 
     def to_dict(self) -> Dict:
@@ -116,6 +121,10 @@ class SpotifyClient:
     """
     Async client for Spotify Web API.
     Uses Client Credentials flow for server-to-server authentication.
+
+    Note: Spotify deprecated the /audio-features endpoint for new apps in late 2024.
+    This client focuses on track metadata and recommendations via Spotify's
+    recommendation algorithm, while audio similarity is handled via Last.fm.
     """
 
     AUTH_URL = "https://accounts.spotify.com/api/token"
@@ -235,9 +244,9 @@ class SpotifyClient:
         """
         Get audio features for multiple tracks.
 
-        NOTE: As of late 2024, Spotify requires user-authorized tokens for
-        /audio-features. With Client Credentials this will return 403.
-        We gracefully return an empty dict so the app can still work.
+        NOTE: As of late 2024, Spotify deprecated the /audio-features endpoint
+        for new apps. This method will likely return an empty dict.
+        Use Last.fm for track similarity instead.
         """
         # Clean track IDs
         clean_ids = []
@@ -247,6 +256,7 @@ class SpotifyClient:
             clean_ids.append(tid)
 
         features = {}
+
         try:
             for i in range(0, len(clean_ids), 100):
                 batch = clean_ids[i:i+100]
@@ -255,9 +265,9 @@ class SpotifyClient:
                     if af:
                         features[af['id']] = AudioFeatures.from_dict(af)
         except Exception:
-            # Audio features endpoint deprecated - requires user OAuth since late 2024
-            # Silently return empty dict; app works without audio features
-            return {}
+            # Audio features endpoint deprecated for new apps (late 2024)
+            # Silently return empty dict - app works without audio features
+            pass
 
         return features
 
@@ -265,12 +275,12 @@ class SpotifyClient:
         """
         Get tracks with their audio features.
 
-        Audio features may be unavailable with Client Credentials flow.
+        Audio features may be unavailable due to Spotify API deprecation.
         Tracks are still returned, just without audio_features attached.
         """
         tracks = await self.get_tracks(track_ids)
 
-        # Try to get audio features (may fail with Client Credentials)
+        # Try to get audio features (may fail due to deprecation)
         features = await self.get_audio_features([t.id for t in tracks])
 
         # Attach features to tracks (may be empty dict)
