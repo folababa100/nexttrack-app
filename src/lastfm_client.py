@@ -63,6 +63,30 @@ class LastFMClient:
         self._similar_cache: Dict[str, List[LastFMTrack]] = {}
         self._tags_cache: Dict[str, LastFMTags] = {}
 
+    @staticmethod
+    def clean_track_name(track_name: str) -> str:
+        """
+        Clean track name for better Last.fm matching.
+        Removes common suffixes like "- Remastered 2011", "(Deluxe)", etc.
+        """
+        import re
+        # Remove remaster/reissue suffixes
+        patterns = [
+            r'\s*-\s*Remaster(ed)?(\s+\d{4})?\s*$',
+            r'\s*-\s*\d{4}\s+Remaster(ed)?\s*$',
+            r'\s*\(Remaster(ed)?(\s+\d{4})?\)\s*$',
+            r'\s*\(Deluxe[^)]*\)\s*$',
+            r'\s*\(Special[^)]*\)\s*$',
+            r'\s*\(Expanded[^)]*\)\s*$',
+            r'\s*\[Remaster(ed)?[^\]]*\]\s*$',
+            r'\s*-\s*Single\s*$',
+            r'\s*-\s*Radio Edit\s*$',
+        ]
+        cleaned = track_name
+        for pattern in patterns:
+            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
+        return cleaned.strip()
+
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(
@@ -115,13 +139,16 @@ class LastFMClient:
         Uses Last.fm's collaborative filtering which is based on
         what users who listened to this track also listened to.
         """
-        cache_key = f"{artist_name}:{track_name}".lower()
+        # Clean track name for better matching
+        clean_name = self.clean_track_name(track_name)
+        
+        cache_key = f"{artist_name}:{clean_name}".lower()
         if cache_key in self._similar_cache:
             return self._similar_cache[cache_key][:limit]
 
         data = await self._api_request(
             'track.getSimilar',
-            track=track_name,
+            track=clean_name,
             artist=artist_name,
             limit=min(limit, 100),
             autocorrect=1
@@ -149,13 +176,16 @@ class LastFMClient:
 
     async def get_track_tags(self, track_name: str, artist_name: str) -> LastFMTags:
         """Get tags for a track (genres, moods, etc.)."""
-        cache_key = f"track:{artist_name}:{track_name}".lower()
+        # Clean track name for better matching
+        clean_name = self.clean_track_name(track_name)
+        
+        cache_key = f"track:{artist_name}:{clean_name}".lower()
         if cache_key in self._tags_cache:
             return self._tags_cache[cache_key]
 
         data = await self._api_request(
             'track.getTopTags',
-            track=track_name,
+            track=clean_name,
             artist=artist_name,
             autocorrect=1
         )

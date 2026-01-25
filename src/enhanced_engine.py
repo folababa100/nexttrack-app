@@ -609,6 +609,8 @@ class EnhancedRecommendationEngine:
                 context
             )
             strategy_scores[RecommendationStrategy.GENRE_MATCH.value] = meta_score
+            # Filter out duplicate "same_artist" (already added above)
+            meta_reasons = [r for r in meta_reasons if r != "same_artist"]
             reasoning.extend(meta_reasons)
 
             # Strategy 4: Cultural context (if Wikidata available)
