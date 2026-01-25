@@ -14,9 +14,9 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #1a1a1a;
             min-height: 100vh;
-            color: #ffffff;
+            color: #f5f0e8;
         }
 
         .container {
@@ -33,27 +33,27 @@
         h1 {
             font-size: 3rem;
             font-weight: 700;
-            background: linear-gradient(90deg, #00d9ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #f5f0e8;
             margin-bottom: 10px;
+            letter-spacing: -1px;
         }
 
         .subtitle {
-            color: #8892b0;
+            color: #a39e93;
             font-size: 1.1rem;
         }
 
         .privacy-badge {
             display: inline-block;
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid #00ff88;
-            color: #00ff88;
+            background: rgba(207, 120, 80, 0.15);
+            border: 1px solid #cf7850;
+            color: #cf7850;
             padding: 5px 15px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 0.85rem;
             margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .main-content {
@@ -70,11 +70,10 @@
         }
 
         .panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
+            background: #242424;
+            border-radius: 8px;
             padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
         }
 
         .panel-title {
@@ -100,17 +99,17 @@
         .search-box input {
             flex: 1;
             padding: 12px 16px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #1a1a1a;
+            color: #f5f0e8;
             font-size: 1rem;
             transition: border-color 0.3s;
         }
 
         .search-box input:focus {
             outline: none;
-            border-color: #00d9ff;
+            border-color: #cf7850;
         }
 
         .search-box input::placeholder {
@@ -128,13 +127,12 @@
         }
 
         .btn-primary {
-            background: linear-gradient(90deg, #00d9ff, #00ff88);
-            color: #1a1a2e;
+            background: #cf7850;
+            color: #1a1a1a;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.4);
+            background: #e88a5c;
         }
 
         .btn-secondary {
@@ -163,21 +161,22 @@
             align-items: center;
             gap: 15px;
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 4px;
             margin-bottom: 10px;
-            background: rgba(0, 0, 0, 0.2);
+            background: #1a1a1a;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            border: 1px solid transparent;
         }
 
         .track-item:hover {
-            background: rgba(0, 217, 255, 0.1);
-            transform: translateX(5px);
+            background: #2a2a2a;
+            border-color: #444;
         }
 
         .track-item.selected {
-            background: rgba(0, 255, 136, 0.15);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            background: rgba(207, 120, 80, 0.1);
+            border: 1px solid #cf7850;
         }
 
         .track-image {
@@ -202,7 +201,7 @@
         }
 
         .track-artist {
-            color: #8892b0;
+            color: #a39e93;
             font-size: 0.9rem;
             white-space: nowrap;
             overflow: hidden;
@@ -217,20 +216,20 @@
         .track-btn {
             width: 32px;
             height: 32px;
-            border-radius: 50%;
+            border-radius: 4px;
             border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            background: #333;
+            color: #f5f0e8;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
 
         .track-btn:hover {
-            background: #00d9ff;
-            color: #1a1a2e;
+            background: #cf7850;
+            color: #1a1a1a;
         }
 
         .track-btn.remove:hover {
@@ -257,11 +256,12 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(0, 217, 255, 0.15);
+            background: #333;
             padding: 8px 12px;
-            border-radius: 20px;
+            border-radius: 4px;
             margin: 5px;
             font-size: 0.9rem;
+            border: 1px solid #444;
         }
 
         .selected-track .remove {
@@ -288,7 +288,7 @@
         .preference-label {
             width: 120px;
             font-size: 0.9rem;
-            color: #8892b0;
+            color: #a39e93;
         }
 
         .preference-slider {
@@ -303,8 +303,8 @@
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            border-radius: 50%;
-            background: #00d9ff;
+            border-radius: 4px;
+            background: #cf7850;
             cursor: pointer;
         }
 
@@ -320,25 +320,25 @@
             align-items: center;
             gap: 15px;
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 4px;
             margin-bottom: 12px;
-            background: linear-gradient(90deg, rgba(0, 217, 255, 0.1), rgba(0, 255, 136, 0.05));
-            border: 1px solid rgba(0, 217, 255, 0.2);
+            background: #1a1a1a;
+            border-left: 3px solid #cf7850;
         }
 
         .recommendation-rank {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #00d9ff;
+            color: #cf7850;
             width: 40px;
             text-align: center;
         }
 
         .recommendation-score {
-            background: rgba(0, 255, 136, 0.2);
-            color: #00ff88;
+            background: #333;
+            color: #cf7850;
             padding: 4px 10px;
-            border-radius: 12px;
+            border-radius: 4px;
             font-size: 0.85rem;
             font-weight: 600;
         }
@@ -355,7 +355,7 @@
             padding: 3px 8px;
             border-radius: 4px;
             font-size: 0.75rem;
-            color: #8892b0;
+            color: #a39e93;
         }
 
         /* Centroid Display */
@@ -368,7 +368,7 @@
 
         .centroid-title {
             font-size: 0.9rem;
-            color: #8892b0;
+            color: #a39e93;
             margin-bottom: 10px;
         }
 
@@ -386,7 +386,7 @@
         .feature-name {
             width: 100px;
             font-size: 0.85rem;
-            color: #8892b0;
+            color: #a39e93;
         }
 
         .feature-bar-bg {
@@ -399,8 +399,8 @@
 
         .feature-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00d9ff, #00ff88);
-            border-radius: 4px;
+            background: #cf7850;
+            border-radius: 2px;
             transition: width 0.5s ease;
         }
 
@@ -414,14 +414,14 @@
         .loading {
             text-align: center;
             padding: 40px;
-            color: #8892b0;
+            color: #a39e93;
         }
 
         .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #00d9ff;
+            border: 3px solid #333;
+            border-top-color: #cf7850;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
@@ -437,13 +437,12 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
+            background: #242424;
             padding: 15px 30px;
             display: none;
             align-items: center;
             gap: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid #333;
         }
 
         .audio-player.active {
@@ -465,10 +464,10 @@
         .player-btn {
             width: 45px;
             height: 45px;
-            border-radius: 50%;
+            border-radius: 4px;
             border: none;
-            background: #00d9ff;
-            color: #1a1a2e;
+            background: #cf7850;
+            color: #1a1a1a;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -494,9 +493,9 @@
             gap: 20px;
             margin-top: 15px;
             padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid #333;
             font-size: 0.85rem;
-            color: #8892b0;
+            color: #a39e93;
         }
 
         .stat {
@@ -506,8 +505,343 @@
         }
 
         .stat-value {
-            color: #00d9ff;
+            color: #cf7850;
             font-weight: 600;
+        }
+
+        /* Session Analysis Panel */
+        .session-analysis {
+            background: #1a1a1a;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid #333;
+        }
+
+        .session-analysis.visible {
+            display: block;
+        }
+
+        .analysis-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .trend-indicator.increasing {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .trend-indicator.decreasing {
+            background: rgba(183, 110, 90, 0.2);
+            color: #b76e5a;
+        }
+
+        .trend-indicator.stable {
+            background: rgba(207, 120, 80, 0.2);
+            color: #cf7850;
+        }
+
+        .session-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .metric-card {
+            background: #242424;
+            border-radius: 4px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #a39e93;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #cf7850;
+        }
+
+        /* Genre Preferences */
+        .genre-section {
+            margin: 15px 0;
+        }
+
+        .genre-label {
+            font-size: 0.9rem;
+            color: #a39e93;
+            margin-bottom: 8px;
+        }
+
+        .genre-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .genre-tag {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #444;
+            background: #1a1a1a;
+            color: #a39e93;
+        }
+
+        .genre-tag:hover {
+            border-color: #cf7850;
+        }
+
+        .genre-tag.preferred {
+            background: rgba(76, 175, 80, 0.15);
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .genre-tag.avoided {
+            background: rgba(183, 110, 90, 0.15);
+            border-color: #b76e5a;
+            color: #b76e5a;
+            text-decoration: line-through;
+        }
+
+        .genre-help {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        /* Diversity Slider */
+        .diversity-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        .diversity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .diversity-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .diversity-value {
+            font-size: 0.85rem;
+            color: #cf7850;
+            font-weight: 600;
+        }
+
+        .diversity-description {
+            font-size: 0.75rem;
+            color: #a39e93;
+            margin-top: 8px;
+        }
+
+        /* Preference Groups */
+        .preference-group {
+            margin-bottom: 20px;
+        }
+
+        .preference-group-title {
+            font-size: 0.85rem;
+            color: #a39e93;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* Collapsible Sections */
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+
+        .collapsible-header:hover {
+            color: #cf7850;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.open {
+            max-height: 500px;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s;
+        }
+
+        .collapse-icon.open {
+            transform: rotate(180deg);
+        }
+
+        /* Status Panel */
+        .status-panel {
+            background: #242424;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .status-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #a39e93;
+            transition: background 0.2s;
+        }
+
+        .status-title:hover {
+            background: #2a2a2a;
+        }
+
+        .status-toggle {
+            transition: transform 0.3s;
+        }
+
+        .status-toggle.open {
+            transform: rotate(180deg);
+        }
+
+        .status-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 20px;
+        }
+
+        .status-content.open {
+            max-height: 200px;
+            padding: 0 20px 15px 20px;
+        }
+
+        .status-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .status-icon {
+            font-size: 1rem;
+        }
+
+        .status-name {
+            color: #f5f0e8;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.active {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .status-badge.inactive {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+
+        .status-badge.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+
+        .status-badge.loading {
+            background: rgba(158, 158, 158, 0.2);
+            color: #9e9e9e;
+        }
+
+        .cache-stats {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 20px;
+            font-size: 0.8rem;
+            color: #a39e93;
+        }
+
+        .cache-stat strong {
+            color: #cf7850;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .feature-badge.enhanced {
+            background: rgba(30, 215, 96, 0.2);
+            color: #1DB954;
+        }
+
+        .feature-badge.limited {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
         }
     </style>
 </head>
@@ -518,6 +852,48 @@
             <p class="subtitle">Privacy-Focused Music Recommendations</p>
             <div class="privacy-badge">🔒 No tracking • No profiling • Stateless</div>
         </header>
+
+        <!-- Integration Status Panel -->
+        <div id="statusPanel" class="status-panel">
+            <div class="status-title" onclick="toggleStatusPanel()">
+                <span>🔌 Data Sources & Integrations</span>
+                <span id="statusToggle" class="status-toggle">▼</span>
+            </div>
+            <div id="statusContent" class="status-content">
+                <div class="status-grid">
+                    <div class="status-item" id="status-spotify">
+                        <span class="status-icon">🎵</span>
+                        <span class="status-name">Spotify</span>
+                        <span class="status-badge loading">...</span>
+                    </div>
+                    <div class="status-item" id="status-musicbrainz">
+                        <span class="status-icon">🎸</span>
+                        <span class="status-name">MusicBrainz</span>
+                        <span class="status-badge loading">...</span>
+                    </div>
+                    <div class="status-item" id="status-wikidata">
+                        <span class="status-icon">📚</span>
+                        <span class="status-name">Wikidata</span>
+                        <span class="status-badge loading">...</span>
+                    </div>
+                    <div class="status-item" id="status-genius">
+                        <span class="status-icon">📝</span>
+                        <span class="status-name">Genius</span>
+                        <span class="status-badge loading">...</span>
+                    </div>
+                    <div class="status-item" id="status-cache">
+                        <span class="status-icon">💾</span>
+                        <span class="status-name">Cache</span>
+                        <span class="status-badge loading">...</span>
+                    </div>
+                </div>
+                <div class="cache-stats" id="cacheStats" style="display: none;">
+                    <span class="cache-stat">Hits: <strong id="cacheHits">0</strong></span>
+                    <span class="cache-stat">Misses: <strong id="cacheMisses">0</strong></span>
+                    <span class="cache-stat">Rate: <strong id="cacheRate">0%</strong></span>
+                </div>
+            </div>
+        </div>
 
         <div class="main-content">
             <!-- Left Panel: Search and Selection -->
@@ -560,26 +936,116 @@
                     Get Recommendations
                 </div>
 
+                <!-- Session Analysis Panel -->
+                <div id="sessionAnalysis" class="session-analysis">
+                    <div class="analysis-title">
+                        📊 Session Analysis
+                        <span id="sessionTrend" class="trend-indicator stable">Analyzing...</span>
+                    </div>
+                    <div class="session-metrics">
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Energy</div>
+                            <div class="metric-value" id="avgEnergy">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Mood</div>
+                            <div class="metric-value" id="avgMood">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Energy Trend</div>
+                            <div class="metric-value" id="energyTrend">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Mood Trend</div>
+                            <div class="metric-value" id="moodTrend">--</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="preferences">
-                    <div class="preference-row">
-                        <span class="preference-label">Min Energy</span>
-                        <input type="range" class="preference-slider" id="minEnergy" min="0" max="100" value="0">
-                        <span class="preference-value" id="minEnergyVal">0%</span>
+                    <!-- Energy & Tempo -->
+                    <div class="preference-group">
+                        <div class="preference-group-title">🔥 Energy & Tempo</div>
+                        <div class="preference-row">
+                            <span class="preference-label">Min Energy</span>
+                            <input type="range" class="preference-slider" id="minEnergy" min="0" max="100" value="0">
+                            <span class="preference-value" id="minEnergyVal">0%</span>
+                        </div>
+                        <div class="preference-row">
+                            <span class="preference-label">Max Energy</span>
+                            <input type="range" class="preference-slider" id="maxEnergy" min="0" max="100" value="100">
+                            <span class="preference-value" id="maxEnergyVal">100%</span>
+                        </div>
+                        <div class="preference-row">
+                            <span class="preference-label">Min Tempo</span>
+                            <input type="range" class="preference-slider" id="minTempo" min="50" max="200" value="50">
+                            <span class="preference-value" id="minTempoVal">50</span>
+                        </div>
+                        <div class="preference-row">
+                            <span class="preference-label">Max Tempo</span>
+                            <input type="range" class="preference-slider" id="maxTempo" min="50" max="200" value="200">
+                            <span class="preference-value" id="maxTempoVal">200</span>
+                        </div>
                     </div>
-                    <div class="preference-row">
-                        <span class="preference-label">Max Energy</span>
-                        <input type="range" class="preference-slider" id="maxEnergy" min="0" max="100" value="100">
-                        <span class="preference-value" id="maxEnergyVal">100%</span>
+
+                    <!-- Mood & Feel -->
+                    <div class="preference-group">
+                        <div class="preference-group-title">😊 Mood & Feel</div>
+                        <div class="preference-row">
+                            <span class="preference-label">Valence (Mood)</span>
+                            <input type="range" class="preference-slider" id="valence" min="0" max="100" value="50">
+                            <span class="preference-value" id="valenceVal">50%</span>
+                        </div>
+                        <div class="preference-row">
+                            <span class="preference-label">Danceability</span>
+                            <input type="range" class="preference-slider" id="danceability" min="0" max="100" value="50">
+                            <span class="preference-value" id="danceabilityVal">50%</span>
+                        </div>
+                        <div class="preference-row">
+                            <span class="preference-label">Acousticness</span>
+                            <input type="range" class="preference-slider" id="acousticness" min="0" max="100" value="50">
+                            <span class="preference-value" id="acousticnessVal">50%</span>
+                        </div>
                     </div>
-                    <div class="preference-row">
-                        <span class="preference-label">Min Tempo</span>
-                        <input type="range" class="preference-slider" id="minTempo" min="50" max="200" value="50">
-                        <span class="preference-value" id="minTempoVal">50</span>
+
+                    <!-- Genre Preferences -->
+                    <div class="preference-group">
+                        <div class="collapsible-header" onclick="toggleCollapsible('genreSection')">
+                            <span class="preference-group-title" style="margin: 0; border: none; padding: 0;">🎸 Genre Preferences</span>
+                            <span id="genreSectionIcon" class="collapse-icon">▼</span>
+                        </div>
+                        <div id="genreSection" class="collapsible-content">
+                            <div class="genre-section">
+                                <div class="genre-label">Click to prefer (green) or avoid (red):</div>
+                                <div class="genre-tags" id="genreTags">
+                                    <span class="genre-tag" data-genre="pop" onclick="toggleGenre(this)">Pop</span>
+                                    <span class="genre-tag" data-genre="rock" onclick="toggleGenre(this)">Rock</span>
+                                    <span class="genre-tag" data-genre="hip-hop" onclick="toggleGenre(this)">Hip-Hop</span>
+                                    <span class="genre-tag" data-genre="r&b" onclick="toggleGenre(this)">R&B</span>
+                                    <span class="genre-tag" data-genre="electronic" onclick="toggleGenre(this)">Electronic</span>
+                                    <span class="genre-tag" data-genre="jazz" onclick="toggleGenre(this)">Jazz</span>
+                                    <span class="genre-tag" data-genre="classical" onclick="toggleGenre(this)">Classical</span>
+                                    <span class="genre-tag" data-genre="country" onclick="toggleGenre(this)">Country</span>
+                                    <span class="genre-tag" data-genre="metal" onclick="toggleGenre(this)">Metal</span>
+                                    <span class="genre-tag" data-genre="indie" onclick="toggleGenre(this)">Indie</span>
+                                    <span class="genre-tag" data-genre="latin" onclick="toggleGenre(this)">Latin</span>
+                                    <span class="genre-tag" data-genre="soul" onclick="toggleGenre(this)">Soul</span>
+                                </div>
+                                <div class="genre-help">💡 Click once = prefer, twice = avoid, three times = neutral</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="preference-row">
-                        <span class="preference-label">Max Tempo</span>
-                        <input type="range" class="preference-slider" id="maxTempo" min="50" max="200" value="200">
-                        <span class="preference-value" id="maxTempoVal">200</span>
+
+                    <!-- Diversity Control -->
+                    <div class="diversity-section">
+                        <div class="diversity-header">
+                            <span class="diversity-label">🎲 Recommendation Diversity</span>
+                            <span class="diversity-value" id="diversityVal">Medium</span>
+                        </div>
+                        <input type="range" class="preference-slider" id="diversity" min="0" max="100" value="50" style="width: 100%;">
+                        <div class="diversity-description" id="diversityDesc">
+                            Balanced mix of similar and varied recommendations
+                        </div>
                     </div>
                 </div>
 
@@ -631,23 +1097,182 @@
     </div>
 
     <script>
+        // Auth State
+        let isLoggedIn = false;
+        let currentUser = null;
+
         // State
         let selectedTracks = [];
         let currentAudio = null;
         let isPlaying = false;
+        let preferredGenres = [];
+        let avoidedGenres = [];
 
         // API base URL
         const API_BASE = '';
+
+        // ============== UI Helper Functions ==============
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 8px;
+                font-weight: 500;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                ${type === 'success'
+                    ? 'background: rgba(30, 215, 96, 0.9); color: white;'
+                    : type === 'error'
+                        ? 'background: rgba(220, 53, 69, 0.9); color: white;'
+                        : 'background: rgba(0, 123, 255, 0.9); color: white;'}
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Remove after 4 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
 
         // Initialize preference sliders
         document.querySelectorAll('.preference-slider').forEach(slider => {
             slider.addEventListener('input', (e) => {
                 const id = e.target.id;
                 const val = e.target.value;
-                document.getElementById(id + 'Val').textContent =
-                    id.includes('Tempo') ? val : val + '%';
+
+                if (id === 'diversity') {
+                    updateDiversityLabel(val);
+                } else {
+                    document.getElementById(id + 'Val').textContent =
+                        id.includes('Tempo') ? val : val + '%';
+                }
             });
         });
+
+        // Update diversity label based on value
+        function updateDiversityLabel(val) {
+            const valNum = parseInt(val);
+            let label, desc;
+
+            if (valNum < 25) {
+                label = 'Low';
+                desc = 'Very similar tracks, consistent vibe';
+            } else if (valNum < 50) {
+                label = 'Medium-Low';
+                desc = 'Mostly similar with some variety';
+            } else if (valNum < 75) {
+                label = 'Medium';
+                desc = 'Balanced mix of similar and varied recommendations';
+            } else {
+                label = 'High';
+                desc = 'Maximum variety, explore new sounds';
+            }
+
+            document.getElementById('diversityVal').textContent = label;
+            document.getElementById('diversityDesc').textContent = desc;
+        }
+
+        // Toggle genre preference
+        function toggleGenre(element) {
+            const genre = element.dataset.genre;
+
+            if (element.classList.contains('preferred')) {
+                // Switch to avoided
+                element.classList.remove('preferred');
+                element.classList.add('avoided');
+                preferredGenres = preferredGenres.filter(g => g !== genre);
+                avoidedGenres.push(genre);
+            } else if (element.classList.contains('avoided')) {
+                // Switch to neutral
+                element.classList.remove('avoided');
+                avoidedGenres = avoidedGenres.filter(g => g !== genre);
+            } else {
+                // Switch to preferred
+                element.classList.add('preferred');
+                preferredGenres.push(genre);
+            }
+        }
+
+        // Toggle collapsible section
+        function toggleCollapsible(sectionId) {
+            const section = document.getElementById(sectionId);
+            const icon = document.getElementById(sectionId + 'Icon');
+
+            section.classList.toggle('open');
+            icon.classList.toggle('open');
+        }
+
+        // Analyze session when tracks change
+        async function analyzeSession() {
+            if (selectedTracks.length < 2) {
+                document.getElementById('sessionAnalysis').classList.remove('visible');
+                return;
+            }
+
+            document.getElementById('sessionAnalysis').classList.add('visible');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',  // Send cookies for auth
+                    body: JSON.stringify({
+                        track_ids: selectedTracks.map(t => t.id)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.analysis) {
+                    updateSessionAnalysis(data.analysis);
+                }
+            } catch (error) {
+                console.error('Session analysis failed:', error);
+            }
+        }
+
+        // Update session analysis display
+        function updateSessionAnalysis(analysis) {
+            // Update metrics
+            if (analysis.average_features) {
+                const avg = analysis.average_features;
+                document.getElementById('avgEnergy').textContent =
+                    avg.energy ? Math.round(avg.energy * 100) + '%' : '--';
+                document.getElementById('avgMood').textContent =
+                    avg.valence ? Math.round(avg.valence * 100) + '%' : '--';
+            }
+
+            // Update trends
+            const energyTrendEl = document.getElementById('energyTrend');
+            const moodTrendEl = document.getElementById('moodTrend');
+            const sessionTrendEl = document.getElementById('sessionTrend');
+
+            const energyTrend = analysis.energy_trend || 'stable';
+            const moodTrend = analysis.mood_trend || 'stable';
+
+            energyTrendEl.textContent = formatTrend(energyTrend);
+            moodTrendEl.textContent = formatTrend(moodTrend);
+
+            // Overall session trend indicator
+            sessionTrendEl.className = 'trend-indicator ' + energyTrend;
+            sessionTrendEl.textContent = energyTrend === 'increasing' ? '📈 Building Up' :
+                                         energyTrend === 'decreasing' ? '📉 Winding Down' :
+                                         '➡️ Steady';
+        }
+
+        function formatTrend(trend) {
+            switch(trend) {
+                case 'increasing': return '↑ Rising';
+                case 'decreasing': return '↓ Falling';
+                default: return '→ Steady';
+            }
+        }
 
         // Search tracks
         async function searchTracks() {
@@ -661,8 +1286,8 @@
                 const response = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}&limit=15`);
                 const data = await response.json();
 
-                if (data.tracks && data.tracks.length > 0) {
-                    resultsDiv.innerHTML = data.tracks.map(track => `
+                if (data.results && data.results.length > 0) {
+                    resultsDiv.innerHTML = data.results.map(track => `
                         <div class="track-item ${selectedTracks.find(t => t.id === track.id) ? 'selected' : ''}"
                              onclick="toggleTrackSelection('${track.id}', this)"
                              data-track='${JSON.stringify(track).replace(/'/g, "\\'")}'>
@@ -702,12 +1327,14 @@
             }
 
             updateSelectedTracksDisplay();
+            analyzeSession(); // Trigger session analysis
         }
 
         // Remove selected track
         function removeSelectedTrack(trackId) {
             selectedTracks = selectedTracks.filter(t => t.id !== trackId);
             updateSelectedTracksDisplay();
+            analyzeSession(); // Trigger session analysis
 
             // Update search results
             document.querySelectorAll('.track-item').forEach(el => {
@@ -754,21 +1381,54 @@
                 // Build preferences
                 const preferences = {};
 
+                // Energy range
                 const minEnergy = parseInt(document.getElementById('minEnergy').value) / 100;
                 const maxEnergy = parseInt(document.getElementById('maxEnergy').value) / 100;
                 if (minEnergy > 0 || maxEnergy < 1) {
                     preferences.energy_range = [minEnergy, maxEnergy];
                 }
 
+                // Tempo range
                 const minTempo = parseInt(document.getElementById('minTempo').value);
                 const maxTempo = parseInt(document.getElementById('maxTempo').value);
                 if (minTempo > 50 || maxTempo < 200) {
                     preferences.tempo_range = [minTempo, maxTempo];
                 }
 
+                // Valence (mood)
+                const valence = parseInt(document.getElementById('valence').value) / 100;
+                if (valence !== 0.5) {
+                    preferences.target_valence = valence;
+                }
+
+                // Danceability
+                const danceability = parseInt(document.getElementById('danceability').value) / 100;
+                if (danceability !== 0.5) {
+                    preferences.target_danceability = danceability;
+                }
+
+                // Acousticness
+                const acousticness = parseInt(document.getElementById('acousticness').value) / 100;
+                if (acousticness !== 0.5) {
+                    preferences.target_acousticness = acousticness;
+                }
+
+                // Genre preferences
+                if (preferredGenres.length > 0) {
+                    preferences.preferred_genres = preferredGenres;
+                }
+                if (avoidedGenres.length > 0) {
+                    preferences.avoided_genres = avoidedGenres;
+                }
+
+                // Diversity level
+                const diversity = parseInt(document.getElementById('diversity').value) / 100;
+                preferences.diversity = diversity;
+
                 const response = await fetch(`${API_BASE}/api/recommend`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',  // Send cookies for auth
                     body: JSON.stringify({
                         track_ids: selectedTracks.map(t => t.id),
                         preferences: Object.keys(preferences).length > 0 ? preferences : null,
@@ -889,7 +1549,7 @@
             try {
                 const response = await fetch(`${API_BASE}/api/health`);
                 const data = await response.json();
-                if (!data.spotify_connected) {
+                if (!data.spotify_configured) {
                     alert('Warning: Spotify API not connected. Please set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET environment variables.');
                 }
             } catch (e) {
@@ -897,7 +1557,100 @@
             }
         }
 
+        // Toggle status panel
+        function toggleStatusPanel() {
+            const content = document.getElementById('statusContent');
+            const toggle = document.getElementById('statusToggle');
+            content.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+
+        // Load external sources status
+        async function loadExternalSourcesStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/external-sources`);
+                const data = await response.json();
+
+                // Update Spotify status
+                updateStatusBadge('status-spotify', data.spotify?.configured);
+
+                // Update MusicBrainz status
+                updateStatusBadge('status-musicbrainz', data.musicbrainz?.configured);
+
+                // Update Wikidata status
+                updateStatusBadge('status-wikidata', data.wikidata?.configured);
+
+                // Update Genius status
+                updateStatusBadge('status-genius', data.genius?.configured);
+
+                // Update Cache status
+                const cacheEl = document.querySelector('#status-cache .status-badge');
+                if (data.cache?.enabled) {
+                    cacheEl.textContent = 'Redis';
+                    cacheEl.className = 'status-badge active';
+                } else {
+                    cacheEl.textContent = 'Memory';
+                    cacheEl.className = 'status-badge inactive';
+                }
+
+            } catch (e) {
+                console.error('Failed to load external sources status:', e);
+                // Set all to error state
+                ['spotify', 'musicbrainz', 'wikidata', 'genius', 'cache'].forEach(source => {
+                    const badge = document.querySelector(`#status-${source} .status-badge`);
+                    if (badge) {
+                        badge.textContent = 'Error';
+                        badge.className = 'status-badge error';
+                    }
+                });
+            }
+        }
+
+        // Update individual status badge
+        function updateStatusBadge(elementId, isActive) {
+            const badge = document.querySelector(`#${elementId} .status-badge`);
+            if (badge) {
+                badge.textContent = isActive ? 'Active' : 'Off';
+                badge.className = `status-badge ${isActive ? 'active' : 'inactive'}`;
+            }
+        }
+
+        // Load cache statistics
+        async function loadCacheStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/cache/stats`);
+                const data = await response.json();
+
+                document.getElementById('cacheHits').textContent = data.hits || 0;
+                document.getElementById('cacheMisses').textContent = data.misses || 0;
+                document.getElementById('cacheRate').textContent = data.hit_rate || '0%';
+                document.getElementById('cacheStats').style.display = 'flex';
+            } catch (e) {
+                console.error('Failed to load cache stats:', e);
+            }
+        }
+
+        // Initialize on page load
         checkHealth();
+        loadExternalSourcesStatus();
+        loadCacheStats();
+
+        // Refresh cache stats periodically
+        setInterval(loadCacheStats, 30000);
+
+        // Add CSS animation keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

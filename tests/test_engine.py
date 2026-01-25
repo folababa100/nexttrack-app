@@ -868,6 +868,168 @@ class TestEnhancedRecommendation:
         assert rec.diversity_bonus == 0.0
 
 
+# ============== Cache Tests ==============
+
+class TestCache:
+    """Tests for the caching module."""
+
+    @pytest.mark.asyncio
+    async def test_cache_set_and_get(self):
+        """Test basic cache operations."""
+        from cache import CacheManager
+
+        cache = CacheManager()
+        # In-memory fallback (no Redis)
+
+        await cache.set("test_key", {"value": 123}, category="track")
+        result = await cache.get("test_key")
+
+        assert result == {"value": 123}
+
+    @pytest.mark.asyncio
+    async def test_cache_miss(self):
+        """Test cache miss returns None."""
+        from cache import CacheManager
+
+        cache = CacheManager()
+        result = await cache.get("nonexistent_key")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_cache_delete(self):
+        """Test cache deletion."""
+        from cache import CacheManager
+
+        cache = CacheManager()
+        await cache.set("delete_me", {"data": "test"})
+        await cache.delete("delete_me")
+
+        result = await cache.get("delete_me")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_cache_stats(self):
+        """Test cache statistics."""
+        from cache import CacheManager
+
+        cache = CacheManager()
+        await cache.get("miss1")
+        await cache.set("hit1", "value")
+        await cache.get("hit1")
+
+        stats = await cache.get_stats()
+        assert "hits" in stats
+        assert "misses" in stats
+        assert "hit_rate" in stats
+
+    def test_cache_key_helper(self):
+        """Test cache key creation helper."""
+        from cache import cache_key
+
+        key = cache_key("track", "abc123")
+        assert key == "track:abc123"
+
+        key = cache_key("search", "query", 10)
+        assert key == "search:query:10"
+
+
+class TestCachedDecorator:
+    """Tests for the cached decorator."""
+
+    @pytest.mark.asyncio
+    async def test_cached_decorator(self):
+        """Test that cached decorator caches results."""
+        from cache import cached, cache
+
+        call_count = 0
+
+        @cached(category="test")
+        async def expensive_function(x: int) -> int:
+            nonlocal call_count
+            call_count += 1
+            return x * 2
+
+        # First call - should execute function
+        result1 = await expensive_function(5)
+        assert result1 == 10
+        assert call_count == 1
+
+        # Second call - should return cached value
+        result2 = await expensive_function(5)
+        assert result2 == 10
+        assert call_count == 1  # Not incremented
+
+    @pytest.mark.asyncio
+    async def test_cached_decorator_different_args(self):
+        """Test cached decorator with different arguments."""
+        from cache import cached
+
+        @cached(category="test")
+        async def multiply(x: int, y: int) -> int:
+            return x * y
+
+        result1 = await multiply(2, 3)
+        result2 = await multiply(3, 4)
+
+        assert result1 == 6
+        assert result2 == 12
+
+
+# ============== Genius Client Tests ==============
+
+class TestGeniusClient:
+    """Tests for the Genius.com client."""
+
+    @pytest.mark.asyncio
+    async def test_genius_client_no_token(self):
+        """Test Genius client gracefully handles missing token."""
+        from genius_client import GeniusClient
+
+        client = GeniusClient(access_token=None)
+        assert not client.is_configured
+
+        result = await client.search_song("Test Song")
+        assert result is None  # Graceful degradation
+
+        await client.close()
+
+    @pytest.mark.asyncio
+    async def test_genius_song_dataclass(self):
+        """Test GeniusSong dataclass."""
+        from genius_client import GeniusSong
+
+        song = GeniusSong(
+            id=123,
+            title="Test Song",
+            artist_name="Test Artist",
+            url="https://genius.com/test",
+            annotation_count=50,
+            description="A test song",
+            primary_genre="Pop"
+        )
+
+        assert song.id == 123
+        assert song.title == "Test Song"
+        assert song.tags == []  # Default empty list
+
+    def test_genius_song_with_tags(self):
+        """Test GeniusSong with tags."""
+        from genius_client import GeniusSong
+
+        song = GeniusSong(
+            id=456,
+            title="Another Song",
+            artist_name="Artist",
+            url="https://genius.com/another",
+            annotation_count=10,
+            tags=["rock", "indie", "2020s"]
+        )
+
+        assert len(song.tags) == 3
+        assert "rock" in song.tags
+
+
 # ============== Integration Tests ==============
 
 class TestIntegration:
