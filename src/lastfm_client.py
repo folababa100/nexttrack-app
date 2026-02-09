@@ -141,7 +141,7 @@ class LastFMClient:
         """
         # Clean track name for better matching
         clean_name = self.clean_track_name(track_name)
-        
+
         cache_key = f"{artist_name}:{clean_name}".lower()
         if cache_key in self._similar_cache:
             return self._similar_cache[cache_key][:limit]
@@ -178,7 +178,7 @@ class LastFMClient:
         """Get tags for a track (genres, moods, etc.)."""
         # Clean track name for better matching
         clean_name = self.clean_track_name(track_name)
-        
+
         cache_key = f"track:{artist_name}:{clean_name}".lower()
         if cache_key in self._tags_cache:
             return self._tags_cache[cache_key]
