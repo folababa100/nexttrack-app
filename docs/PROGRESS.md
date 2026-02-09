@@ -164,21 +164,30 @@ NextTrack is a privacy-focused music recommendation API that provides intelligen
 
 ## Spotify API Deprecations (Late 2024)
 
-**Important:** Spotify deprecated several endpoints for Client Credentials flow AND OAuth for new apps:
+**⚠️ DO NOT ATTEMPT TO FIX - OFFICIALLY DEPRECATED BY SPOTIFY**
 
-| Endpoint | Status | Impact |
-|----------|--------|--------|
-| `/audio-features` | 403 Forbidden | Cannot compute audio similarity directly |
-| `/recommendations` | 404 Not Found | Cannot use seed-based recs |
-| `/artists/{id}/related-artists` | 404 Not Found | Cannot find related artists |
+Spotify has officially deprecated several endpoints. These are **not bugs to fix** - they are permanent API changes.
 
-**Workarounds Implemented:**
+See: https://developer.spotify.com/documentation/web-api/reference/get-audio-analysis
+
+| Endpoint | Status | Official Notice |
+|----------|--------|-----------------|
+| `/audio-features` | 🚫 403 Forbidden | **DEPRECATED** - Marked as deprecated on Spotify docs |
+| `/audio-analysis` | 🚫 403 Forbidden | **DEPRECATED** - OAuth 2.0 Deprecated label on docs |
+| `/recommendations` | 🚫 404 Not Found | Removed for new apps |
+| `/artists/{id}/related-artists` | 🚫 404 Not Found | Removed for new apps |
+
+**Our Workarounds (Already Implemented):**
 - ✅ Last.fm integration for track similarity via collaborative filtering
 - ✅ Last.fm tag-based audio feature estimation
 - ✅ Artist-based search discovery using `/search` endpoint
 - ✅ MusicBrainz integration for genre-based artist discovery
 - ✅ Wikidata for cultural context and artist relationships
-- ❌ OAuth approach abandoned (Spotify returns 403 even with user tokens for new apps)
+
+**What NOT to do:**
+- ❌ Do not try to implement OAuth to get audio features (Spotify returns 403 even with user tokens for new apps created after Nov 2024)
+- ❌ Do not try to call `/audio-features` or `/audio-analysis` endpoints
+- ❌ Do not try to use seed-based `/recommendations` endpoint
 
 ---
 
@@ -345,8 +354,62 @@ pytest tests/ -v
 
 ---
 
+## Fixable Issues (TODO)
+
+The following issues were identified during code review and can be addressed:
+
+### 1. Legacy/Unused Files
+| File | Issue | Suggested Action |
+|------|-------|------------------|
+| `src/api.py` | Old prototype with mock data, not used by main.py | Delete or archive |
+| `src/recommendation_engine.py` | Legacy duplicate of engine.py | Delete or archive |
+
+### 2. Genius Context Returns Null for Some Tracks
+**Problem:** The Genius API search fails for tracks with suffixes like "- Remastered 2011" because Genius doesn't index remastered versions separately.
+
+**Fix:** Apply the same `clean_track_name()` pattern used in `lastfm_client.py` to `genius_client.py`:
+```python
+# In genius_client.py search_song method
+clean_title = self.clean_track_name(title)  # Strip "- Remastered", "(Deluxe)" etc.
+```
+
+### 3. Redis Not Configured (Low Priority)
+**Current:** Falls back to in-memory cache (working fine for development).
+
+**To Enable Redis:**
+```bash
+# Install Redis
+brew install redis
+brew services start redis
+
+# Or via Docker
+docker run -d -p 6379:6379 redis
+
+# Set environment variable
+export REDIS_URL=redis://localhost:6379/0
+```
+
+### 4. Recommendation Scores Could Be More Varied
+**Problem:** When Spotify audio features are unavailable AND Last.fm tag estimation produces similar features for candidates, scores cluster around similar values (0.5-0.6).
+
+**Potential Improvements:**
+- Increase weight of genre matching strategy when audio features unavailable
+- Add more tag categories to `estimate_audio_features_from_tags()` for finer granularity
+- Use Last.fm playcount/popularity as additional scoring factor
+
+### 5. No Preview URLs for Most Tracks
+**Problem:** Spotify no longer provides preview URLs for many tracks.
+
+**This is a Spotify limitation, not fixable.** Could potentially:
+- Link to YouTube search as fallback
+- Show "Preview unavailable" message in UI (currently just hides the button)
+
+---
+
 ## Commit Log (Recent)
 
+- **Jan 25, 2026:** Fixed duplicate "same_artist" reasoning in recommendations
+- **Jan 25, 2026:** Added track name cleaning to Last.fm client for better matching
 - **Jan 25, 2026:** Last.fm integration for track similarity and feature estimation
 - **Jan 25, 2026:** Removed OAuth code (Spotify deprecated for new apps)
 - **Jan 25, 2026:** Fixed UI search results display

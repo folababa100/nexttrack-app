@@ -1,0 +1,39 @@
+---
+geometry: margin=2.54cm
+fontsize: 12pt
+mainfont: "Times New Roman"
+sansfont: "Helvetica Neue"
+monofont: "Courier New"
+linestretch: 1.5
+colorlinks: true
+linkcolor: MidnightBlue
+urlcolor: MidnightBlue
+toccolor: MidnightBlue
+toc: true
+toc-depth: 3
+highlight-style: tango
+header-includes: |
+  \usepackage{titlesec}
+  \usepackage{xcolor}
+  \definecolor{chapterblue}{RGB}{27, 58, 92}
+  \definecolor{sectionblue}{RGB}{44, 95, 138}
+  \definecolor{subsectionblue}{RGB}{58, 124, 184}
+  \titleformat{\section}{\normalfont\LARGE\bfseries\color{chapterblue}}{}{0em}{}
+  \titleformat{\subsection}{\normalfont\Large\bfseries\color{sectionblue}}{}{0em}{}
+  \titleformat{\subsubsection}{\normalfont\large\bfseries\color{subsectionblue}}{}{0em}{}
+  \titleformat{\paragraph}{\normalfont\normalsize\bfseries\itshape\color{subsectionblue}}{}{0em}{}
+  \usepackage{fancyhdr}
+  \pagestyle{fancy}
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \fancyhead[L]{\leftmark}
+  \fancyhead[R]{\small NextTrack Draft Report}
+  \usepackage{caption}
+  \captionsetup{font={small,it}, labelfont={bf}}
+  \usepackage{booktabs}
+  \usepackage{longtable}
+  \usepackage{float}
+  \floatplacement{figure}{H}
+  \usepackage{graphicx}
+---
