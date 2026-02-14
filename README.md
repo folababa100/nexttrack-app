@@ -67,6 +67,54 @@ python main.py
 - **API Docs**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
+## ☁️ Deploy to Fly.io (Lowest-Cost Setup)
+
+This repository now includes a production-ready `Dockerfile` and `fly.toml` configured for low cost:
+- `shared` CPU, 1 vCPU
+- `256mb` RAM
+- scale to zero when idle (`min_machines_running = 0`)
+
+### 1. Install and authenticate Fly CLI
+
+```bash
+brew install flyctl
+fly auth login
+```
+
+### 2. Create Fly app (first time only)
+
+```bash
+fly launch --no-deploy
+```
+
+If prompted for app name, choose one and update the `app` value in `fly.toml`.
+
+### 3. Set runtime secrets
+
+```bash
+fly secrets set \
+  SPOTIFY_CLIENT_ID="your_client_id" \
+  SPOTIFY_CLIENT_SECRET="your_client_secret" \
+  LASTFM_API_KEY="your_lastfm_api_key" \
+  GENIUS_ACCESS_TOKEN="your_genius_token"
+```
+
+`LASTFM_API_KEY` and `GENIUS_ACCESS_TOKEN` are optional.
+
+### 4. Deploy
+
+```bash
+fly deploy
+```
+
+### 5. Verify
+
+```bash
+fly status
+fly logs
+curl https://<your-app-name>.fly.dev/api/health
+```
+
 ## 📖 API Endpoints
 
 ### Search Tracks
