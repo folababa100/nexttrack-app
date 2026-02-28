@@ -249,6 +249,7 @@ async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
+        "version": app.version,
         "spotify_configured": spotify_client is not None,
         "engine_ready": recommendation_engine is not None,
         "cache_enabled": cache.is_enabled

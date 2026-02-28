@@ -15,6 +15,9 @@ API Documentation: https://musicbrainz.org/doc/MusicBrainz_API
 import asyncio
 from typing import List, Dict, Optional, Set
 from dataclasses import dataclass, field
+import json
+import subprocess
+import urllib.parse
 import httpx
 
 
@@ -205,19 +208,55 @@ class MusicBrainzClient:
         params['fmt'] = 'json'  # Always request JSON
 
         url = f"{self.API_BASE}/{endpoint}"
-        response = await client.get(url, params=params)
-
-        if response.status_code == 503:
-            # Rate limited - wait and retry
-            await asyncio.sleep(2)
+        try:
             response = await client.get(url, params=params)
 
-        if response.status_code != 200:
-            raise Exception(
-                f"MusicBrainz API error: {response.status_code} - {response.text}"
-            )
+            if response.status_code == 503:
+                # Rate limited - wait and retry
+                await asyncio.sleep(2)
+                response = await client.get(url, params=params)
 
-        return response.json()
+            if response.status_code != 200:
+                raise Exception(
+                    f"MusicBrainz API error: {response.status_code} - {response.text}"
+                )
+
+            return response.json()
+        except Exception:
+            # Fallback for environments where Python TLS/network stack cannot
+            # connect reliably, while command-line curl still works.
+            return self._curl_api_request(url, params)
+
+    def _curl_api_request(self, url: str, params: Dict) -> Dict:
+        """Fallback API request using curl binary."""
+        query = urllib.parse.urlencode(params)
+        full_url = f"{url}?{query}"
+
+        cmd = [
+            "curl",
+            "-sS",
+            "-H",
+            f"User-Agent: {self.user_agent}",
+            "-H",
+            "Accept: application/json",
+            full_url,
+        ]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+
+        if result.returncode != 0:
+            raise Exception(f"MusicBrainz curl fallback failed: {result.stderr.strip()}")
+
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            raise Exception("MusicBrainz curl fallback returned invalid JSON") from exc
 
     async def search_artists(
         self,

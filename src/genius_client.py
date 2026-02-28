@@ -10,6 +10,9 @@ import os
 import re
 
 
+_TOKEN_UNSET = object()
+
+
 @dataclass
 class GeniusSong:
     """Genius song information."""
@@ -40,8 +43,11 @@ class GeniusClient:
 
     BASE_URL = "https://api.genius.com"
 
-    def __init__(self, access_token: Optional[str] = None):
-        self.access_token = access_token or os.getenv("GENIUS_ACCESS_TOKEN")
+    def __init__(self, access_token=_TOKEN_UNSET):
+        if access_token is _TOKEN_UNSET:
+            self.access_token = os.getenv("GENIUS_ACCESS_TOKEN")
+        else:
+            self.access_token = access_token
         self._client: Optional[httpx.AsyncClient] = None
 
     @property
