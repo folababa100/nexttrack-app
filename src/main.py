@@ -277,7 +277,10 @@ async def search_tracks(
             "results": [t.to_dict() for t in tracks]
         }
     except Exception as e:
-        raise HTTPException(500, f"Search failed: {str(e)}")
+        msg = str(e)
+        if "403" in msg or "premium" in msg.lower() or "subscription" in msg.lower():
+            raise HTTPException(503, "Spotify API access denied. This usually means the Spotify account linked to this app requires an active Premium subscription.")
+        raise HTTPException(500, f"Search failed: {msg}")
 
 
 @app.get("/api/track/{track_id}")
@@ -368,7 +371,10 @@ async def get_recommendations(request: RecommendRequest):
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:
-        raise HTTPException(500, f"Recommendation failed: {str(e)}")
+        msg = str(e)
+        if "403" in msg or "premium" in msg.lower() or "subscription" in msg.lower():
+            raise HTTPException(503, "Spotify API access denied. This usually means the Spotify account linked to this app requires an active Premium subscription.")
+        raise HTTPException(500, f"Recommendation failed: {msg}")
 
 
 class AnalyzeRequest(BaseModel):

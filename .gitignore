@@ -1,1 +1,11 @@
 .env
+__pycache__/
+.venv/
+.pytest_cache/
+.DS_Store
+.vscode/
+
+# Non-app directories
+docs/
+data/
+scripts/

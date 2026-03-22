@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NextTrack - Privacy-Focused Music Recommendations</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%231db954'/><text x='50' y='68' text-anchor='middle' font-size='60' fill='white'>♪</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -1286,6 +1287,12 @@
                 const response = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}&limit=15`);
                 const data = await response.json();
 
+                if (!response.ok) {
+                    const errMsg = data.detail || 'Search failed';
+                    resultsDiv.innerHTML = `<div class="empty-state"><p style="color:#ff6b6b;">⚠️ ${escapeHtml(errMsg)}</p></div>`;
+                    return;
+                }
+
                 if (data.results && data.results.length > 0) {
                     resultsDiv.innerHTML = data.results.map(track => `
                         <div class="track-item ${selectedTracks.find(t => t.id === track.id) ? 'selected' : ''}"
@@ -1437,6 +1444,12 @@
                 });
 
                 const data = await response.json();
+
+                if (!response.ok) {
+                    const errMsg = data.detail || 'Recommendation failed';
+                    recsDiv.innerHTML = `<div class="empty-state"><p style="color:#ff6b6b;">⚠️ ${escapeHtml(errMsg)}</p></div>`;
+                    return;
+                }
 
                 if (data.recommendations && data.recommendations.length > 0) {
                     recsDiv.innerHTML = data.recommendations.map((rec, i) => `
