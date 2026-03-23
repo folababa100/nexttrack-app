@@ -2,7 +2,7 @@
 
 A RESTful API that provides intelligent music recommendations without user tracking or profiling.
 
-## 🎯 Project Overview
+## Project Overview
 
 **CM3035 Advanced Web Design - Final Project**
 
@@ -15,13 +15,13 @@ NextTrack is a stateless music recommendation system that:
 
 ### Key Features
 
-- 🔒 **Privacy-First**: No user tracking, profiling, or data retention
-- 🎵 **Multi-Source**: Combines Spotify, MusicBrainz, and Wikidata
-- 🎯 **Smart Recommendations**: Audio similarity + genre matching + diversity
-- 🌐 **RESTful API**: Well-documented endpoints with OpenAPI specs
-- 🖥️ **Web Demo**: Interactive UI for testing recommendations
+- **Privacy-First**: No user tracking, profiling, or data retention
+- **Multi-Source**: Combines Spotify, MusicBrainz, and Wikidata
+- **Smart Recommendations**: Audio similarity + genre matching + diversity
+- **RESTful API**: Well-documented endpoints with OpenAPI specs
+- **Web Demo**: Interactive UI for testing recommendations
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Prerequisites
 
@@ -67,7 +67,7 @@ python main.py
 - **API Docs**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
-## ☁️ Deploy to Fly.io (Lowest-Cost Setup)
+## Deploy to Fly.io (Lowest-Cost Setup)
 
 This repository now includes a production-ready `Dockerfile` and `fly.toml` configured for low cost:
 - `shared` CPU, 1 vCPU
@@ -115,7 +115,7 @@ fly logs
 curl https://<your-app-name>.fly.dev/api/health
 ```
 
-## 📖 API Endpoints
+## API Endpoints
 
 ### Search Tracks
 ```http
@@ -147,16 +147,16 @@ Content-Type: application/json
 GET /api/health
 ```
 
-## 🎮 Using the Web Demo
+## Using the Web Demo
 
 1. **Search** for songs using the search box
 2. **Click** on tracks to add them to your "listening history"
 3. **Adjust** preference sliders (energy, tempo) if desired
 4. **Click** "Get Recommendations" to see suggestions
-5. **Play** previews using the ▶ buttons
+5. **Play** previews using the play buttons
 6. **View** the computed audio profile (centroid) showing why tracks were recommended
 
-## 🔧 Technical Details
+## Technical Details
 
 ### Recommendation Algorithm
 
@@ -179,7 +179,7 @@ GET /api/health
 | Speechiness | 0.4 | Presence of spoken words |
 | Liveness | 0.3 | Audience presence |
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 final-project/
@@ -204,7 +204,7 @@ final-project/
 └── README.md
 ```
 
-## 🔬 Recommendation Strategies
+## Recommendation Strategies
 
 ### 1. Audio Feature Similarity
 Uses weighted Euclidean distance between audio features (energy, valence, danceability, etc.)
@@ -221,7 +221,7 @@ Uses artist influences and era information for context-aware recommendations
 ### 5. Diversity Injection
 Prevents homogeneous results by penalizing similar tracks
 
-## 🧪 Running Tests
+## Running Tests
 
 ```bash
 # Run all tests
@@ -231,13 +231,13 @@ pytest tests/ -v
 pytest tests/ -v --cov=src
 ```
 
-## 📝 Documentation
+## Documentation
 
 - [Progress Tracker](docs/PROGRESS.md) - Development status and completed features
 - [Preliminary Report](docs/preliminary_report.md) - Academic documentation
 - [API Docs](http://localhost:8000/docs) - Interactive OpenAPI documentation (when running)
 
-## 🎥 Demo Video Tips
+## Demo Video Tips
 
 When recording your 3-5 minute video demonstration:
 
@@ -249,16 +249,16 @@ When recording your 3-5 minute video demonstration:
 6. **Centroid Display** (45s): Explain the computed audio profile
 7. **Conclusion** (30s): Summarize the stateless, privacy-preserving approach
 
-## 📝 License
+## License
 
 This project is for educational purposes as part of CM3035 Advanced Web Design.
 
-## 🔗 Resources
+## Resources
 
 - [Spotify Web API Documentation](https://developer.spotify.com/documentation/web-api/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Audio Features Explained](https://developer.spotify.com/documentation/web-api/reference/get-audio-features)
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 - `403 Forbidden` from Spotify: double-check that your Client ID/Secret are correct, the app has at least one Redirect URI in the dashboard, and that `SPOTIFY_MARKET` is set to a country where your seed tracks are available (e.g., `US`, `GB`, `NG`). Restart the server after updating environment variables.

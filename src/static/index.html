@@ -882,6 +882,11 @@
                         <span class="status-name">Genius</span>
                         <span class="status-badge loading">...</span>
                     </div>
+                    <div class="status-item" id="status-lastfm">
+                        <span class="status-icon">📻</span>
+                        <span class="status-name">Last.fm</span>
+                        <span class="status-badge loading">...</span>
+                    </div>
                     <div class="status-item" id="status-cache">
                         <span class="status-icon">💾</span>
                         <span class="status-name">Cache</span>
@@ -1596,6 +1601,9 @@
                 // Update Genius status
                 updateStatusBadge('status-genius', data.genius?.configured);
 
+                // Update Last.fm status
+                updateStatusBadge('status-lastfm', data.lastfm?.configured);
+
                 // Update Cache status
                 const cacheEl = document.querySelector('#status-cache .status-badge');
                 if (data.cache?.enabled) {
@@ -1609,7 +1617,7 @@
             } catch (e) {
                 console.error('Failed to load external sources status:', e);
                 // Set all to error state
-                ['spotify', 'musicbrainz', 'wikidata', 'genius', 'cache'].forEach(source => {
+                ['spotify', 'musicbrainz', 'wikidata', 'genius', 'lastfm', 'cache'].forEach(source => {
                     const badge = document.querySelector(`#status-${source} .status-badge`);
                     if (badge) {
                         badge.textContent = 'Error';
